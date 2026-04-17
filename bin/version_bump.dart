@@ -1,8 +1,8 @@
 import 'dart:io';
 
 /// Automated Version Bumper for Flutter (V4.1)
-/// 
-/// Usage: 
+///
+/// Usage:
 /// dart bin/version_bump.dart --patch  (Increments 1.0.0+1 -> 1.0.1+1)
 /// dart bin/version_bump.dart --build  (Increments 1.0.0+1 -> 1.0.0+2)
 void main(List<String> args) {
@@ -21,10 +21,14 @@ void main(List<String> args) {
   }
 
   final versionLine = lines[versionIndex];
-  final currentVersionMatch = RegExp(r'version:\s*(?<semver>[0-9.]+)\+(?<build>[0-9]+)').firstMatch(versionLine);
+  final currentVersionMatch = RegExp(
+    r'version:\s*(?<semver>[0-9.]+)\+(?<build>[0-9]+)',
+  ).firstMatch(versionLine);
 
   if (currentVersionMatch == null) {
-    print('❌ Error: Invalid version format in pubspec.yaml. Expected: version: X.Y.Z+W');
+    print(
+      '❌ Error: Invalid version format in pubspec.yaml. Expected: version: X.Y.Z+W',
+    );
     exit(1);
   }
 
@@ -37,7 +41,7 @@ void main(List<String> args) {
   }
 
   final parts = majorMinorPatch.split('.').map(int.parse).toList();
-  
+
   if (args.contains('--patch')) {
     parts[2]++;
     print('🚀 Incrementing Patch: $majorMinorPatch -> ${parts.join('.')}');

@@ -26,7 +26,9 @@ class ScoutSearchHeader extends GetView<DiscoveryController> {
           hintText: 'FILTER NODES...',
           hintStyle: SeraphineTypography.boldTracking.copyWith(
             fontSize: 9,
-            color: SeraphineColors.of(context).textDetail.withValues(alpha: 0.5),
+            color: SeraphineColors.of(
+              context,
+            ).textDetail.withValues(alpha: 0.5),
           ),
           prefixIcon: Icon(
             CupertinoIcons.search,

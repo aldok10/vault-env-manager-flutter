@@ -51,8 +51,7 @@ class DiffHunk {
     required this.lines,
   });
 
-  String get header =>
-      '@@ -$oldStart,$oldCount +$newStart,$newCount @@';
+  String get header => '@@ -$oldStart,$oldCount +$newStart,$newCount @@';
 }
 
 /// Computes a unified diff between [oldText] and [newText].
@@ -83,10 +82,12 @@ class LineDiff {
     String newText,
   ) {
     final diff = computeFull(oldText, newText);
-    final additions =
-        diff.where((d) => d.operation == DiffOperation.insert).length;
-    final deletions =
-        diff.where((d) => d.operation == DiffOperation.delete).length;
+    final additions = diff
+        .where((d) => d.operation == DiffOperation.insert)
+        .length;
+    final deletions = diff
+        .where((d) => d.operation == DiffOperation.delete)
+        .length;
     return (additions: additions, deletions: deletions);
   }
 
@@ -122,27 +123,33 @@ class LineDiff {
 
     while (i > 0 || j > 0) {
       if (i > 0 && j > 0 && oldLines[i - 1] == newLines[j - 1]) {
-        result.add(DiffLine(
-          operation: DiffOperation.equal,
-          text: newLines[j - 1],
-          oldLineNumber: i,
-          newLineNumber: j,
-        ));
+        result.add(
+          DiffLine(
+            operation: DiffOperation.equal,
+            text: newLines[j - 1],
+            oldLineNumber: i,
+            newLineNumber: j,
+          ),
+        );
         i--;
         j--;
       } else if (j > 0 && (i == 0 || lcs[i][j - 1] >= lcs[i - 1][j])) {
-        result.add(DiffLine(
-          operation: DiffOperation.insert,
-          text: newLines[j - 1],
-          newLineNumber: j,
-        ));
+        result.add(
+          DiffLine(
+            operation: DiffOperation.insert,
+            text: newLines[j - 1],
+            newLineNumber: j,
+          ),
+        );
         j--;
       } else if (i > 0) {
-        result.add(DiffLine(
-          operation: DiffOperation.delete,
-          text: oldLines[i - 1],
-          oldLineNumber: i,
-        ));
+        result.add(
+          DiffLine(
+            operation: DiffOperation.delete,
+            text: oldLines[i - 1],
+            oldLineNumber: i,
+          ),
+        );
         i--;
       }
     }

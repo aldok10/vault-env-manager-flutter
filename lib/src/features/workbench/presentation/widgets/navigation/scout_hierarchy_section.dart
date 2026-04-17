@@ -79,14 +79,18 @@ class ScoutHierarchySection extends GetView<DiscoveryController> {
             Icon(
               isSearching ? CupertinoIcons.search : CupertinoIcons.wind,
               size: 32,
-              color: SeraphineColors.of(context).textDetail.withValues(alpha: 0.2),
+              color: SeraphineColors.of(
+                context,
+              ).textDetail.withValues(alpha: 0.2),
             ),
             SeraphineSpacing.mdV,
             Text(
               isSearching ? 'NO NODES MATCHED' : 'READY TO ANALYZE',
               style: SeraphineTypography.boldTracking.copyWith(
                 fontSize: 9,
-                color: SeraphineColors.of(context).textDetail.withValues(alpha: 0.3),
+                color: SeraphineColors.of(
+                  context,
+                ).textDetail.withValues(alpha: 0.3),
                 fontStyle: FontStyle.italic,
               ),
             ),

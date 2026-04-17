@@ -82,7 +82,11 @@ class SeraphineNowBar extends StatelessWidget {
 
           if (actions != null && actions!.isNotEmpty) ...[
             SeraphineSpacing.mdH,
-            Container(height: 16, width: 1, color: SeraphineColors.of(context).divider),
+            Container(
+              height: 16,
+              width: 1,
+              color: SeraphineColors.of(context).divider,
+            ),
             SeraphineSpacing.mdH,
             ...actions!,
           ],

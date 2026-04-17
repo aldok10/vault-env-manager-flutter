@@ -21,7 +21,6 @@ class VaultTokenForm extends StatelessWidget {
           onChanged: (_) => controller.errorMsg.value = '',
           onSubmitted: (_) => controller.signIn(),
         ),
-
       ],
     );
   }

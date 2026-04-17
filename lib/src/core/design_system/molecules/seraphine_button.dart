@@ -231,9 +231,15 @@ class _SeraphineButtonState extends State<SeraphineButton> {
   }
 
   Color _getTextColor(bool isDisabled, SeraphineColorExtension colors) {
-    if (isDisabled) { return colors.textDetail; }
-    if (widget.variant == SeraphineButtonVariant.solid) { return Colors.white; }
-    if (widget.variant == SeraphineButtonVariant.outline && _isHovered.value) { return colors.primary; }
+    if (isDisabled) {
+      return colors.textDetail;
+    }
+    if (widget.variant == SeraphineButtonVariant.solid) {
+      return Colors.white;
+    }
+    if (widget.variant == SeraphineButtonVariant.outline && _isHovered.value) {
+      return colors.primary;
+    }
     return colors.textPrimary;
   }
 }

@@ -16,11 +16,7 @@ class WorkbenchDiffExplorer extends GetView<WorkbenchController> {
     final colors = SeraphineColors.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _DiffHeader(),
-        SeraphineSpacing.mdV,
-        _DiffBody(),
-      ],
+      children: [_DiffHeader(), SeraphineSpacing.mdV, _DiffBody()],
     );
   }
 }
@@ -191,10 +187,9 @@ class _GitDiffView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = SeraphineColors.of(context);
-    final hunks = const LineDiff(contextLines: 3).computeHunks(
-      oldText,
-      newText,
-    );
+    final hunks = const LineDiff(
+      contextLines: 3,
+    ).computeHunks(oldText, newText);
 
     if (hunks.isEmpty) {
       return Padding(
@@ -378,10 +373,6 @@ class _HunkSeparator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = SeraphineColors.of(context);
-    return Container(
-      width: double.infinity,
-      height: 1,
-      color: colors.divider,
-    );
+    return Container(width: double.infinity, height: 1, color: colors.divider);
   }
 }

@@ -34,7 +34,9 @@ class SeraphineEditorHeader extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
         color: colors.surface.withValues(alpha: 0.4),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(colors.cardRadius)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(colors.cardRadius),
+        ),
         border: Border.all(color: colors.border),
       ),
       child: LayoutBuilder(

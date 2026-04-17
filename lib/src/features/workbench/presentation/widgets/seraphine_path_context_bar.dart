@@ -43,7 +43,10 @@ class SeraphinePathContextBar extends GetView<WorkbenchController> {
             SeraphineSpacing.smH,
             Expanded(
               child: Obx(
-                () => _buildPathDisplay(context, controller.selectedEnvPath.value),
+                () => _buildPathDisplay(
+                  context,
+                  controller.selectedEnvPath.value,
+                ),
               ),
             ),
           ],
@@ -83,14 +86,24 @@ class SeraphinePathContextBar extends GetView<WorkbenchController> {
     );
   }
 
-  Widget _buildPathSegment(BuildContext context, String segmentRaw, bool isLast) {
+  Widget _buildPathSegment(
+    BuildContext context,
+    String segmentRaw,
+    bool isLast,
+  ) {
     final segment = segmentRaw.toUpperCase();
     Color? badgeColor;
 
     // Environment highlighting
-    if (segment == 'PRODUCTION') { badgeColor = SeraphineColors.of(context).primary; }
-    if (segment == 'STAGING') { badgeColor = SeraphineColors.of(context).warning; }
-    if (segment == 'DEVELOPMENT') { badgeColor = SeraphineColors.of(context).primary; }
+    if (segment == 'PRODUCTION') {
+      badgeColor = SeraphineColors.of(context).primary;
+    }
+    if (segment == 'STAGING') {
+      badgeColor = SeraphineColors.of(context).warning;
+    }
+    if (segment == 'DEVELOPMENT') {
+      badgeColor = SeraphineColors.of(context).primary;
+    }
 
     if (badgeColor != null) {
       return Container(

@@ -58,7 +58,6 @@ class VaultAuthController extends GetxController {
     super.onClose();
   }
 
-
   void toggleMethod(String method) {
     selectedMethod.value = method;
     errorMsg.value = '';

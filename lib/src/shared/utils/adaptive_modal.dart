@@ -35,7 +35,9 @@ abstract class AdaptiveModal {
                 width: 36,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: SeraphineColors.of(context).textDetail.withValues(alpha: 0.3),
+                  color: SeraphineColors.of(
+                    context,
+                  ).textDetail.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),

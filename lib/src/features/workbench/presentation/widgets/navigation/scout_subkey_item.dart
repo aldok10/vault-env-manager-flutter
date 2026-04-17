@@ -30,7 +30,10 @@ class ScoutSubKeyItem extends GetView<DiscoveryController> {
           keyName == controller.selectedKey;
 
       return Stack(
-        children: [_buildHierarchyLine(context), _buildContent(context, isSelected)],
+        children: [
+          _buildHierarchyLine(context),
+          _buildContent(context, isSelected),
+        ],
       ).animate().fadeIn(duration: 300.ms).slideX(begin: -0.05, end: 0);
     });
   }
@@ -137,7 +140,9 @@ class ScoutSubKeyItem extends GetView<DiscoveryController> {
                 Icon(
                   CupertinoIcons.arrow_right_circle,
                   size: 10,
-                  color: SeraphineColors.of(context).textDetail.withValues(alpha: 0.2),
+                  color: SeraphineColors.of(
+                    context,
+                  ).textDetail.withValues(alpha: 0.2),
                 ),
             ],
           ),

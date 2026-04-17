@@ -175,7 +175,9 @@ class _SeraphineDropdownState<T> extends State<SeraphineDropdown<T>>
                     shadows: _isOpen || _isHovered
                         ? [
                             BoxShadow(
-                              color: SeraphineColors.of(context).primaryGlow.withValues(alpha: 0.1),
+                              color: SeraphineColors.of(
+                                context,
+                              ).primaryGlow.withValues(alpha: 0.1),
                               blurRadius: 20,
                               offset: const Offset(0, 4),
                             ),
@@ -446,7 +448,8 @@ class _SeraphineDropdownItemState extends State<_SeraphineDropdownItem> {
                 ? SeraphineColors.of(context).primary.withValues(alpha: 0.15)
                 : (_isHovered ? colors.surfaceHighlight : Colors.transparent),
             shape: SeraphineShapes.squircle(
-              radius: colors.cardRadius - 2, // Slightly smaller for internal items
+              radius:
+                  colors.cardRadius - 2, // Slightly smaller for internal items
             ),
           ),
           child: Row(

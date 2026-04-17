@@ -144,7 +144,7 @@ class _ScalingWrapper extends StatelessWidget {
   Widget build(BuildContext context) {
     return Obx(() {
       final scale = AppConfigService.to.uiScale.value;
-      
+
       if (scale == 1.0) return child;
 
       final baseData = MediaQuery.of(context);

@@ -69,13 +69,13 @@ void main() {
     test('Payload with tampered signature throws SecurityException', () async {
       final jsonStr = json.encode({'key': 'value'});
       final encrypted = await securityService.encrypt(jsonStr);
-      
+
       final Map<String, dynamic> data = json.decode(encrypted);
       // Tamper with the ciphertext or nonce
       data['c'] = base64Encode(utf8.encode('tampered'));
-      
+
       final tamperedPayload = json.encode(data);
-      
+
       expect(
         () => securityService.decrypt(tamperedPayload),
         throwsA(isA<SecurityException>()),

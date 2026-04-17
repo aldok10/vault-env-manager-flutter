@@ -14,10 +14,10 @@ void main() {
 
   setUp(() {
     mockRepo = MockIAuthRepository();
-    
+
     // Stubbing isSetup to return false for initialization screen
     when(() => mockRepo.isSetup()).thenReturn(false);
-    
+
     controller = AuthController(mockRepo);
     Get.put<AuthController>(controller);
   });
@@ -26,19 +26,19 @@ void main() {
     Get.delete<AuthController>();
   });
 
-  testWidgets('AuthCard field should have autofocus and stable FocusNode', (tester) async {
+  testWidgets('AuthCard field should have autofocus and stable FocusNode', (
+    tester,
+  ) async {
     // We need to provide a simple Material app wrapper
     await tester.pumpWidget(
-      const GetMaterialApp(
-        home: Scaffold(
-          body: AuthCard(),
-        ),
-      ),
+      const GetMaterialApp(home: Scaffold(body: AuthCard())),
     );
 
     // Initial pump to settle animations
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 1000)); // Account for scale/fade animation
+    await tester.pump(
+      const Duration(milliseconds: 1000),
+    ); // Account for scale/fade animation
 
     // 1. Verify TextField is present
     final textFieldFinder = find.byType(TextField);
@@ -47,7 +47,11 @@ void main() {
     // 2. Verify autofocus works (the focus node in controller should have focus)
     // On web/desktop, autofocus might need a pump
     await tester.pump();
-    expect(controller.focusNode.hasFocus, isTrue, reason: 'TextField should be autofocused');
+    expect(
+      controller.focusNode.hasFocus,
+      isTrue,
+      reason: 'TextField should be autofocused',
+    );
 
     // 3. Verify inputting text works
     await tester.enterText(textFieldFinder, 'secret-key');
@@ -56,14 +60,22 @@ void main() {
     // 4. Verify focus is maintained after a rebuild (triggering Obx by changing isError)
     controller.isError.value = true;
     await tester.pump();
-    
-    expect(controller.focusNode.hasFocus, isTrue, reason: 'Should maintain focus after Obx rebuild');
-    
+
+    expect(
+      controller.focusNode.hasFocus,
+      isTrue,
+      reason: 'Should maintain focus after Obx rebuild',
+    );
+
     // 5. Verify field is disabled when loading
     controller.isLoading.value = true;
     await tester.pump();
-    
+
     final TextField textField = tester.widget(textFieldFinder);
-    expect(textField.enabled, isFalse, reason: 'TextField should be disabled when loading');
+    expect(
+      textField.enabled,
+      isFalse,
+      reason: 'TextField should be disabled when loading',
+    );
   });
 }

@@ -74,7 +74,9 @@ class _SeraphineWorkbenchWidgetState extends State<SeraphineWorkbenchWidget>
             onTap: widget.isCollapsible ? _toggleCollapse : null,
             borderRadius: _isCollapsed
                 ? BorderRadius.circular(colors.cardRadius)
-                : BorderRadius.vertical(top: Radius.circular(colors.cardRadius)),
+                : BorderRadius.vertical(
+                    top: Radius.circular(colors.cardRadius),
+                  ),
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 16, 16, 12),
               child: Row(

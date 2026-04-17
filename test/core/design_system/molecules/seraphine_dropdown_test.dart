@@ -5,7 +5,9 @@ import 'package:vault_env_manager/src/core/design_system/molecules/seraphine_dro
 import 'package:vault_env_manager/src/core/design_system/seraphine_theme.dart';
 
 void main() {
-  testWidgets('SeraphineDropdown opens overlay and selects item', (WidgetTester tester) async {
+  testWidgets('SeraphineDropdown opens overlay and selects item', (
+    WidgetTester tester,
+  ) async {
     final value = 'A'.obs;
     final items = ['A', 'B', 'C'];
     String? selectedValue;
@@ -37,13 +39,15 @@ void main() {
     expect(find.text('C'), findsOneWidget);
 
     // Tap 'B'
-    await tester.tap(find.text('B').last); // .last because 'A' might be in the button and menu
+    await tester.tap(
+      find.text('B').last,
+    ); // .last because 'A' might be in the button and menu
     await tester.pumpAndSettle();
 
     // Verify value changed
     expect(value.value, 'B');
     expect(selectedValue, 'B');
-    
+
     // Verify overlay closed
     expect(find.text('C'), findsNothing);
   });
