@@ -1,3 +1,4 @@
+// ignore_for_file: avoid_print
 import 'dart:io';
 
 /// Elite Wiki Generator (V5.0)
@@ -107,8 +108,9 @@ void main() {
     for (final dep in deps) {
       String usage = 'Core framework/utility.';
       if (dep == 'get') usage = 'State management & DI.';
-      if (dep == 'cryptography' || dep == 'encrypt')
+      if (dep == 'cryptography' || dep == 'encrypt') {
         usage = 'Industrial security.';
+      }
       if (dep == 'figma_squircle') usage = 'Apple HIG design continuity.';
       if (dep == 'dartz') usage = 'Functional error handling (Either).';
       if (dep == 'flutter_animate') usage = 'Micro-interactions.';

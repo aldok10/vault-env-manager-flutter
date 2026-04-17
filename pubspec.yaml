@@ -25,8 +25,8 @@ dependencies:
   google_fonts: ^8.0.2
   http: ^1.2.1
   intl: ^0.20.2
-  local_auth: ^2.3.0
-  local_auth_darwin: ^1.4.0
+  local_auth: ^3.0.1
+  local_auth_darwin: ^2.0.3
   multi_split_view: ^3.6.1
   pretty_diff_text: ^2.1.0
   shared_preferences: ^2.5.5

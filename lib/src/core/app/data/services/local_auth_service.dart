@@ -36,13 +36,7 @@ class LocalAuthService extends GetxService {
     String reason = 'Authenticate to unlock Vault Master',
   }) async {
     try {
-      return await _auth.authenticate(
-        localizedReason: reason,
-        options: const AuthenticationOptions(
-          stickyAuth: true,
-          biometricOnly: true,
-        ),
-      );
+      return await _auth.authenticate(localizedReason: reason);
     } on PlatformException {
       return false;
     }

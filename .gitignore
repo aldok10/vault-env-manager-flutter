@@ -46,6 +46,8 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
+/macos/build/*
+
 *.db
 *.txt
 # Added by code-review-graph

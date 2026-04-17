@@ -13,7 +13,7 @@ class WorkbenchDiffExplorer extends GetView<WorkbenchController> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = SeraphineColors.of(context);
+    final _ = SeraphineColors.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [_DiffHeader(), SeraphineSpacing.mdV, _DiffBody()],

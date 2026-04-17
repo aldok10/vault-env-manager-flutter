@@ -1,19 +1,19 @@
-/// 🧬 LCS-Based Line Diff Algorithm
-/// Pure Dart implementation — no external dependencies.
-/// Produces git-style unified diff output.
+// 🧬 LCS-Based Line Diff Algorithm
+// Pure Dart implementation — no external dependencies.
+// Produces git-style unified diff output.
 
-/// The type of change for a diff line.
+// The type of change for a diff line.
 enum DiffOperation { equal, insert, delete }
 
-/// A single line in the diff output.
+// A single line in the diff output.
 class DiffLine {
   final DiffOperation operation;
   final String text;
 
-  /// Line number in the OLD text (null for insertions).
+  // Line number in the OLD text (null for insertions).
   final int? oldLineNumber;
 
-  /// Line number in the NEW text (null for deletions).
+  // Line number in the NEW text (null for deletions).
   final int? newLineNumber;
 
   const DiffLine({
@@ -35,7 +35,7 @@ class DiffLine {
   }
 }
 
-/// A hunk header (e.g. @@ -1,5 +1,7 @@).
+// A hunk header (e.g. @@ -1,5 +1,7 @@).
 class DiffHunk {
   final int oldStart;
   final int oldCount;
@@ -54,14 +54,14 @@ class DiffHunk {
   String get header => '@@ -$oldStart,$oldCount +$newStart,$newCount @@';
 }
 
-/// Computes a unified diff between [oldText] and [newText].
+// Computes a unified diff between [oldText] and [newText].
 class LineDiff {
-  /// Context lines around each change (like `git diff -U3`).
+  // Context lines around each change (like `git diff -U3`).
   final int contextLines;
 
   const LineDiff({this.contextLines = 3});
 
-  /// Returns the full list of [DiffLine]s (every line, not just hunks).
+  // Returns the full list of [DiffLine]s (every line, not just hunks).
   List<DiffLine> computeFull(String oldText, String newText) {
     final oldLines = oldText.split('\n');
     final newLines = newText.split('\n');
@@ -70,13 +70,13 @@ class LineDiff {
     return _buildFullDiff(oldLines, newLines, lcs);
   }
 
-  /// Returns grouped [DiffHunk]s with context, like `git diff`.
+  // Returns grouped [DiffHunk]s with context, like `git diff`.
   List<DiffHunk> computeHunks(String oldText, String newText) {
     final fullDiff = computeFull(oldText, newText);
     return _groupIntoHunks(fullDiff);
   }
 
-  /// Stats: additions, deletions.
+  // Stats: additions, deletions.
   ({int additions, int deletions}) computeStats(
     String oldText,
     String newText,
@@ -203,10 +203,10 @@ class LineDiff {
       if (fullDiff[i].operation != DiffOperation.delete) newStart++;
     }
 
-    int oldCount = lines
+    final oldCount = lines
         .where((l) => l.operation != DiffOperation.insert)
         .length;
-    int newCount = lines
+    final newCount = lines
         .where((l) => l.operation != DiffOperation.delete)
         .length;
 
