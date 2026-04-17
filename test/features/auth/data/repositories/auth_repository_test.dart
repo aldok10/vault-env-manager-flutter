@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:crypto/crypto.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 import 'package:vault_env_manager/src/core/app/data/services/app_config_service.dart';
@@ -21,13 +24,8 @@ void main() {
     test(
       'should return Right(true) when the correct password is provided',
       () async {
-        // Setup the master password first
         await repository.setupMasterPassword('12345678');
-
-        // Act
         final result = await repository.unlock('12345678');
-
-        // Assert
         expect(result.isRight(), true);
       },
     );
@@ -35,19 +33,92 @@ void main() {
     test(
       'should return Left(AuthFailure) when an incorrect password is provided',
       () async {
-        // Setup the master password first
         await repository.setupMasterPassword('12345678');
-
-        // Act
         final result = await repository.unlock('wrong-password');
-
-        // Assert
         expect(result.isLeft(), true);
         result.fold(
           (failure) => expect(failure, isA<AuthFailure>()),
-          (success) => fail('Should have failed'),
+          (_) => fail('Should have failed'),
         );
       },
     );
+
+    test('setupMasterPassword produces a v2-prefixed record', () async {
+      await repository.setupMasterPassword('hunter2');
+      final stored = mockConfig.cipherPass.value;
+      final parts = stored.split(r'$');
+      expect(parts[0], 'v2');
+      expect(int.parse(parts[1]), greaterThanOrEqualTo(100000));
+      // 32-byte salt → 44-char base64 (with padding) or 43 without.
+      final salt = base64Decode(parts[2]);
+      final dk = base64Decode(parts[3]);
+      expect(salt.length, 32);
+      expect(dk.length, 32);
+    });
+
+    test('hash salt is random across setups (not deterministic)', () async {
+      await repository.setupMasterPassword('hunter2');
+      final first = mockConfig.cipherPass.value;
+
+      await repository.setupMasterPassword('hunter2');
+      final second = mockConfig.cipherPass.value;
+
+      expect(first, isNot(equals(second)),
+          reason: 'Two setups with the same password must not collide.');
+    });
+
+    test('empty master password is rejected at setup', () async {
+      final result = await repository.setupMasterPassword('');
+      expect(result.isLeft(), true);
+    });
+
+    test('legacy v1 hash is accepted and transparently upgraded to v2',
+        () async {
+      // Recreate the old v1 hash algorithm exactly.
+      const password = 'legacy-password';
+      const salt = 'vault-env-manager-v1-salt';
+      final key = utf8.encode('master-key-derivation-secret');
+      final data = utf8.encode(salt + base64.encode(utf8.encode(password)));
+      final legacyHash = Hmac(sha256, key).convert(data).toString();
+
+      await mockConfig.setCipherPass(legacyHash);
+      expect(mockConfig.cipherPass.value.startsWith('v2\$'), false);
+
+      final unlocked = await repository.unlock(password);
+      expect(unlocked.isRight(), true);
+
+      // After a successful legacy unlock the record must be re-saved as v2.
+      expect(mockConfig.cipherPass.value.startsWith('v2\$'), true,
+          reason: 'Legacy record should be upgraded to v2 on successful unlock.');
+
+      // Subsequent unlocks go through the v2 path.
+      final again = await repository.unlock(password);
+      expect(again.isRight(), true);
+    });
+
+    test('legacy v1 hash with wrong password is rejected', () async {
+      const password = 'legacy-password';
+      const salt = 'vault-env-manager-v1-salt';
+      final key = utf8.encode('master-key-derivation-secret');
+      final data = utf8.encode(salt + base64.encode(utf8.encode(password)));
+      final legacyHash = Hmac(sha256, key).convert(data).toString();
+
+      await mockConfig.setCipherPass(legacyHash);
+
+      final result = await repository.unlock('not-the-password');
+      expect(result.isLeft(), true);
+      // The stored record must NOT be changed on a failed unlock.
+      expect(mockConfig.cipherPass.value, legacyHash);
+    });
+
+    test('unlock on a fresh install (no master password set) fails cleanly',
+        () async {
+      final result = await repository.unlock('anything');
+      expect(result.isLeft(), true);
+      result.fold(
+        (f) => expect(f, isA<AuthFailure>()),
+        (_) => fail('Should have failed'),
+      );
+    });
   });
 }
