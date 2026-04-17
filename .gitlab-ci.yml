@@ -1,0 +1,91 @@
+stages:
+  - lint
+  - test
+  - build_android_web
+  - build_ios_macos
+
+variables:
+  FLUTTER_VERSION: "stable"
+  FF_USE_FASTZIP: "true"
+  CACHE_DIR: ".pub-cache"
+
+default:
+  image: ghcr.io/cirruslabs/flutter:$FLUTTER_VERSION
+  before_script:
+    - flutter pub get
+
+# Cache implementation
+cache:
+  key: ${CI_COMMIT_REF_SLUG}
+  paths:
+    - .pub-cache/
+    - .dart_tool/
+
+# LINT STAGE
+static_analysis:
+  stage: lint
+  script:
+    - flutter analyze
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == "main"
+
+# TEST STAGE
+unit_tests:
+  stage: test
+  script:
+    - flutter test --coverage
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: lcov
+        path: coverage/lcov.info
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == "main"
+
+# BUILD STAGE: Android & Web
+build_android:
+  stage: build_android_web
+  script:
+    - flutter build apk --release
+    - flutter build appbundle --release
+  artifacts:
+    name: "android-release-$CI_COMMIT_TAG"
+    paths:
+      - build/app/outputs/flutter-apk/*.apk
+      - build/app/outputs/bundle/release/*.aab
+    expire_in: 1 week
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v/
+
+build_web:
+  stage: build_android_web
+  script:
+    - flutter build web --release
+  artifacts:
+    name: "web-release-$CI_COMMIT_TAG"
+    paths:
+      - build/web/
+    expire_in: 1 week
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v/
+
+# BUILD STAGE: iOS & macOS (Requires macOS Runner)
+build_ios_macos:
+  stage: build_ios_macos
+  tags:
+    - macos
+    - xcode
+  script:
+    - flutter build ios --release --no-codesign
+    - flutter build macos --release
+  artifacts:
+    name: "apple-release-$CI_COMMIT_TAG"
+    paths:
+      - build/ios/iphoneos/*.app
+      - build/macos/Build/Products/Release/*.app
+    expire_in: 1 week
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v/
+      when: manual # Requires manual trigger due to specific runner costs

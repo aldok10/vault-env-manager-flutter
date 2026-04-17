@@ -1,0 +1,86 @@
+name: Build & Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    name: Build for ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
+        include:
+          - os: macos-latest
+            output_name: vault_env_manager-macos.dmg
+            build_cmd: flutter build macos --release
+          - os: windows-latest
+            output_name: vault_env_manager-windows.exe
+            build_cmd: flutter build windows --release
+          - os: ubuntu-latest
+            output_name: vault_env_manager-linux.AppImage
+            build_cmd: flutter build linux --release
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Get Dependencies
+        run: flutter pub get
+
+      - name: Build Application
+        run: ${{ matrix.build_cmd }}
+
+      # Note: Real production workflows would include code signing here.
+      # For now, we package the raw build outputs.
+
+      - name: Create Artifacts (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          cd build/macos/Build/Products/Release
+          hdiutil create -volname "Vault Env Manager" -srcfolder vault_env_manager.app -ov -format UDZO ../../../../vault_env_manager-macos.dmg
+
+      - name: Create Artifacts (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          powershell Compress-Archive -Path build\windows\runner\Release\* -DestinationPath vault_env_manager-windows.zip
+
+      - name: Create Artifacts (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          # Simplified for now: just zip the release folder
+          zip -r vault_env_manager-linux.zip build/linux/x64/release/bundle/
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.os }}-build
+          path: |
+            *.dmg
+            *.zip
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            */*.dmg
+            */*.zip
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
