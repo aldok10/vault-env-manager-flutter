@@ -25,33 +25,82 @@ class Crypt {
     }
   }
 
-  /// Creates a Crypt from a Laravel APP_KEY string.
-  /// Automatically handles the `base64:` prefix.
+  /// Creates a [Crypt] from a Laravel `APP_KEY` string.
+  ///
+  /// Accepted formats:
+  ///
+  /// * `base64:<key>` — the Laravel canonical form (what `php artisan
+  ///   key:generate` emits). Padding and base64url (`-`/`_`) variants are
+  ///   tolerated before decoding.
+  /// * Raw base64 / base64url of a key that decodes to *exactly*
+  ///   `keySize / 8` bytes.
+  ///
+  /// **Intentionally rejected**:
+  ///
+  /// * Any input whose decoded byte length does not match `keySize / 8`.
+  /// * Any input that is not valid base64 after the optional prefix is
+  ///   stripped.
+  ///
+  /// Previous revisions of this factory attempted to salvage a key by
+  /// either (a) treating non-base64 input as a UTF-8 string and zero-
+  /// padding or truncating it to `keySize / 8` bytes, or (b) silently
+  /// decoding a base64 payload of the wrong length. Both produced an
+  /// `AES-256` context from attacker-controllable, low-entropy input
+  /// (e.g. the string `password` zero-padded to 32 bytes has 8 bytes of
+  /// entropy, not 32). That defeats the whole point of using a 256-bit
+  /// key. A Laravel `APP_KEY` is always a base64-encoded CSPRNG key of
+  /// the correct length — any deviation is a misconfiguration that must
+  /// surface as an explicit error rather than be silently weakened.
   factory Crypt.fromAppKey(String appKey, {int keySize = 256}) {
+    if (keySize != 128 && keySize != 256) {
+      throw ArgumentError.value(
+        keySize,
+        'keySize',
+        'AES key size must be 128 or 256 bits.',
+      );
+    }
+
     String raw = appKey;
     if (raw.startsWith('base64:')) {
       raw = raw.substring(7);
     }
+    if (raw.isEmpty) {
+      throw const CryptException(
+        'APP_KEY is empty. Expected a base64-encoded key of '
+        '16 or 32 bytes (Laravel `php artisan key:generate` output).',
+      );
+    }
 
-    // Normalize Base64 (handle base64url and missing padding)
+    // Normalise base64url alphabet and pad to a multiple of 4 — callers
+    // occasionally paste a key without the trailing `=` padding, which
+    // is legal per RFC 4648 §3.2.
     raw = raw.replaceAll('-', '+').replaceAll('_', '/');
     while (raw.length % 4 != 0) {
       raw += '=';
     }
 
+    final Uint8List decoded;
     try {
-      final decoded = base64Decode(raw);
-      return Crypt.fromBytes(Uint8List.fromList(decoded), keySize: keySize);
-    } catch (e) {
-      // If it's not a valid base64 key, use it as a raw string (UTF-8)
-      // but ensure it's padded/trimmed to the correct size.
-      final utf8Bytes = utf8.encode(raw);
-      final keyBytes = Uint8List(keySize ~/ 8);
-      for (var i = 0; i < keyBytes.length; i++) {
-        if (i < utf8Bytes.length) keyBytes[i] = utf8Bytes[i];
-      }
-      return Crypt.fromBytes(keyBytes, keySize: keySize);
+      decoded = Uint8List.fromList(base64Decode(raw));
+    } on FormatException catch (e) {
+      throw CryptException(
+        'APP_KEY is not valid base64: ${e.message}. '
+        'Expected `base64:<...>` produced by '
+        '`php artisan key:generate`.',
+      );
     }
+
+    final expectedBytes = keySize ~/ 8;
+    if (decoded.length != expectedBytes) {
+      throw CryptException(
+        'APP_KEY decodes to ${decoded.length} bytes but AES-$keySize '
+        'requires exactly $expectedBytes bytes. Regenerate the key '
+        'with `php artisan key:generate` (or set APP_KEY to a '
+        'base64-encoded CSPRNG key of the correct length).',
+      );
+    }
+
+    return Crypt.fromBytes(decoded, keySize: keySize);
   }
 
   /// Encrypts [plainText] into a Laravel-compatible Base64 payload.
