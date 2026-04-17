@@ -34,28 +34,78 @@ class SecureHttpClient extends http.BaseClient {
   }
 
   /// Creates a pinning-enabled IO client for production use.
+  ///
+  /// `fingerprint` is the SHA-256 of the expected leaf certificate's DER
+  /// encoding (colons optional, case-insensitive).
+  ///
+  /// When no fingerprint is supplied, this callback **fails closed**: it
+  /// only ever returns `true` for certificates that the OS TLS stack has
+  /// already accepted, because `badCertificateCallback` is invoked solely
+  /// when the default chain validation has already rejected a cert. An
+  /// unconfigured fingerprint must therefore never cause us to accept a
+  /// cert the OS rejected — doing so would turn missing configuration
+  /// into a silent MITM backdoor. The old behaviour (`return true` when
+  /// no pin is configured) has been removed.
   static IOClient createPinningClient(String? fingerprint) {
+    final String? expectedHash = _normalisePin(fingerprint);
+
     final HttpClient httpClient = HttpClient()
       ..badCertificateCallback = (X509Certificate cert, String host, int port) {
-        if (fingerprint == null || fingerprint.isEmpty) return true;
-
-        // Compute SHA-256 fingerprint of the certificate
-        final certHash = crypto.sha256
-            .convert(cert.der)
-            .toString()
-            .toLowerCase();
-        final expectedHash = fingerprint.replaceAll(':', '').toLowerCase();
-
-        final isValid = certHash == expectedHash;
-        if (!isValid) {
-          debugPrint('⚠️ SECURITY ALERT: Certificate Pinning Mismatch!');
-          debugPrint('Expected: $expectedHash');
-          debugPrint('Received: $certHash');
+        final bool accept = verifyPin(cert.der, expectedHash);
+        if (!accept) {
+          if (expectedHash == null) {
+            debugPrint(
+              'SecureHttpClient: rejecting bad certificate for $host:$port '
+              '— no pin configured to override OS decision.',
+            );
+          } else {
+            final certHash = crypto.sha256
+                .convert(cert.der)
+                .toString()
+                .toLowerCase();
+            debugPrint('⚠️ SECURITY ALERT: Certificate Pinning Mismatch!');
+            debugPrint('Host: $host:$port');
+            debugPrint('Expected: $expectedHash');
+            debugPrint('Received: $certHash');
+          }
         }
-        return isValid;
+        return accept;
       };
 
     return IOClient(httpClient);
+  }
+
+  /// Pure predicate exposed for unit tests: does `certDer` match the
+  /// configured pin? Returns `false` when no pin is configured (fail-closed).
+  @visibleForTesting
+  static bool verifyPin(List<int> certDer, String? expectedHashNormalised) {
+    if (expectedHashNormalised == null) return false;
+    final certHash = crypto.sha256.convert(certDer).toString().toLowerCase();
+    return _constantTimeEquals(certHash, expectedHashNormalised);
+  }
+
+  /// Normalise a user-supplied fingerprint to lowercase hex without colons.
+  /// Returns `null` when the input is null or empty, which downstream
+  /// callers treat as "no pin configured".
+  static String? _normalisePin(String? fingerprint) {
+    if (fingerprint == null || fingerprint.isEmpty) return null;
+    return fingerprint.replaceAll(':', '').toLowerCase();
+  }
+
+  /// Public wrapper around [_normalisePin], exposed for unit tests.
+  @visibleForTesting
+  static String? debugNormalisePin(String? fingerprint) =>
+      _normalisePin(fingerprint);
+
+  /// Constant-time string equality to avoid leaking how many leading
+  /// bytes of a candidate hash matched the expected pin.
+  static bool _constantTimeEquals(String a, String b) {
+    if (a.length != b.length) return false;
+    var diff = 0;
+    for (var i = 0; i < a.length; i++) {
+      diff |= a.codeUnitAt(i) ^ b.codeUnitAt(i);
+    }
+    return diff == 0;
   }
 
   @override
