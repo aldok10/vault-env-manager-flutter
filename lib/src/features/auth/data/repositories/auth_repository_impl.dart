@@ -119,6 +119,12 @@ class AuthRepositoryImpl implements IAuthRepository {
       return false;
     }
 
+    // A v2 record with a tampered/empty salt or derived-key field must be
+    // rejected outright. Otherwise _pbkdf2(..., dkLen: 0) returns an empty
+    // list and _constantTimeEquals([], []) trivially matches, letting any
+    // password unlock the app. See Devin Review finding on MR !1.
+    if (salt.isEmpty || expected.isEmpty) return false;
+
     final candidate = _pbkdf2(
       utf8.encode(password),
       salt,
@@ -134,7 +140,9 @@ class AuthRepositoryImpl implements IAuthRepository {
 
   bool _verifyLegacy(String password, String storedHex) {
     final key = utf8.encode(_legacyKey);
-    final data = utf8.encode(_legacySalt + base64.encode(utf8.encode(password)));
+    final data = utf8.encode(
+      _legacySalt + base64.encode(utf8.encode(password)),
+    );
     final computed = Hmac(sha256, key).convert(data).toString();
     // Constant-time over the stored hex representation.
     return _constantTimeEqualsString(computed, storedHex);
