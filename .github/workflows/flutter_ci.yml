@@ -21,6 +21,9 @@ jobs:
           cache: true
           # flutter-version: '3.29.0' # Optional: Pin version
           
+      - name: Create .env from example
+        run: cp assets/.env.example assets/.env
+
       - name: Install dependencies
         run: flutter pub get
         
