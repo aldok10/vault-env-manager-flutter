@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'dart:math';
-import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
 import 'package:dartz/dartz.dart';
+import 'package:flutter/foundation.dart';
 import 'package:vault_env_manager/src/core/app/data/services/app_config_service.dart';
 import 'package:vault_env_manager/src/core/error/failures.dart';
 import 'package:vault_env_manager/src/features/auth/domain/repositories/i_auth_repository.dart';
@@ -44,7 +44,7 @@ class AuthRepositoryImpl implements IAuthRepository {
       if (password.isEmpty) {
         return const Left(AuthFailure('Master password must not be empty.'));
       }
-      final hash = _hashV2(password);
+      final hash = await _hashV2(password);
       await _config.setCipherPass(hash);
       return const Right(true);
     } catch (e) {
@@ -61,7 +61,7 @@ class AuthRepositoryImpl implements IAuthRepository {
       }
 
       if (stored.startsWith('$_v2Prefix\$')) {
-        return _verifyV2(password, stored)
+        return (await _verifyV2(password, stored))
             ? const Right(true)
             : const Left(AuthFailure('Invalid master password'));
       }
@@ -69,7 +69,7 @@ class AuthRepositoryImpl implements IAuthRepository {
       // Legacy (v1) record. Verify with old HMAC, then upgrade to v2.
       if (_verifyLegacy(password, stored)) {
         try {
-          await _config.setCipherPass(_hashV2(password));
+          await _config.setCipherPass(await _hashV2(password));
         } catch (_) {
           // Upgrade failure must not block login; log-only once wiring
           // a proper logger is available.
@@ -91,19 +91,29 @@ class AuthRepositoryImpl implements IAuthRepository {
   // v2 — PBKDF2-HMAC-SHA256
   // ---------------------------------------------------------------------
 
-  String _hashV2(String password) {
+  /// Hashes a new master password using a freshly-generated salt.
+  ///
+  /// The PBKDF2 inner loop is delegated to [compute] so the 100 000-round
+  /// HMAC-SHA256 derivation runs on a background isolate, keeping the UI
+  /// thread responsive on lower-end devices (see Devin Review finding on
+  /// MR !1). In `flutter_test` contexts, [compute] transparently runs the
+  /// callback on the current isolate.
+  Future<String> _hashV2(String password) async {
     final salt = _randomBytes(_pbkdf2SaltBytes);
-    final dk = _pbkdf2(
-      utf8.encode(password),
-      salt,
-      _pbkdf2Iterations,
-      _pbkdf2DkBytes,
+    final dk = await compute(
+      _pbkdf2Isolate,
+      _Pbkdf2Args(
+        password: utf8.encode(password),
+        salt: salt,
+        iterations: _pbkdf2Iterations,
+        dkLen: _pbkdf2DkBytes,
+      ),
     );
     return '$_v2Prefix\$$_pbkdf2Iterations\$'
         '${base64Encode(salt)}\$${base64Encode(dk)}';
   }
 
-  bool _verifyV2(String password, String stored) {
+  Future<bool> _verifyV2(String password, String stored) async {
     final parts = stored.split(r'$');
     if (parts.length != 4 || parts[0] != _v2Prefix) return false;
 
@@ -125,11 +135,14 @@ class AuthRepositoryImpl implements IAuthRepository {
     // password unlock the app. See Devin Review finding on MR !1.
     if (salt.isEmpty || expected.isEmpty) return false;
 
-    final candidate = _pbkdf2(
-      utf8.encode(password),
-      salt,
-      iterations,
-      expected.length,
+    final candidate = await compute(
+      _pbkdf2Isolate,
+      _Pbkdf2Args(
+        password: utf8.encode(password),
+        salt: salt,
+        iterations: iterations,
+        dkLen: expected.length,
+      ),
     );
     return _constantTimeEquals(candidate, expected);
   }
@@ -151,39 +164,6 @@ class AuthRepositoryImpl implements IAuthRepository {
   // ---------------------------------------------------------------------
   // Primitives
   // ---------------------------------------------------------------------
-
-  /// RFC 2898 PBKDF2 with HMAC-SHA256.
-  Uint8List _pbkdf2(
-    List<int> password,
-    List<int> salt,
-    int iterations,
-    int dkLen,
-  ) {
-    final hmac = Hmac(sha256, password);
-    const hLen = 32; // SHA-256 output size
-    final blocks = (dkLen + hLen - 1) ~/ hLen;
-    final out = Uint8List(blocks * hLen);
-
-    for (var i = 1; i <= blocks; i++) {
-      final block = Uint8List(salt.length + 4)
-        ..setRange(0, salt.length, salt)
-        ..[salt.length] = (i >> 24) & 0xff
-        ..[salt.length + 1] = (i >> 16) & 0xff
-        ..[salt.length + 2] = (i >> 8) & 0xff
-        ..[salt.length + 3] = i & 0xff;
-
-      var u = Uint8List.fromList(hmac.convert(block).bytes);
-      final t = Uint8List.fromList(u);
-      for (var c = 1; c < iterations; c++) {
-        u = Uint8List.fromList(hmac.convert(u).bytes);
-        for (var j = 0; j < hLen; j++) {
-          t[j] ^= u[j];
-        }
-      }
-      out.setRange((i - 1) * hLen, i * hLen, t);
-    }
-    return Uint8List.sublistView(out, 0, dkLen);
-  }
 
   Uint8List _randomBytes(int length) {
     final rng = Random.secure();
@@ -211,4 +191,69 @@ class AuthRepositoryImpl implements IAuthRepository {
     }
     return diff == 0;
   }
+}
+
+/// RFC 2898 PBKDF2-HMAC-SHA256 derivation.
+///
+/// Exposed as a top-level function so [compute] can spawn it in a
+/// background isolate — `compute` rejects closures and instance methods
+/// because those cannot be sent across isolate boundaries.
+///
+/// Also used directly by unit tests to exercise the RFC 6070 test vectors
+/// without any `AppConfigService` wiring.
+@visibleForTesting
+Uint8List pbkdf2HmacSha256({
+  required List<int> password,
+  required List<int> salt,
+  required int iterations,
+  required int dkLen,
+}) {
+  final hmac = Hmac(sha256, password);
+  const hLen = 32; // SHA-256 output size in bytes.
+  final blocks = (dkLen + hLen - 1) ~/ hLen;
+  final out = Uint8List(blocks * hLen);
+
+  for (var i = 1; i <= blocks; i++) {
+    final block = Uint8List(salt.length + 4)
+      ..setRange(0, salt.length, salt)
+      ..[salt.length] = (i >> 24) & 0xff
+      ..[salt.length + 1] = (i >> 16) & 0xff
+      ..[salt.length + 2] = (i >> 8) & 0xff
+      ..[salt.length + 3] = i & 0xff;
+
+    var u = Uint8List.fromList(hmac.convert(block).bytes);
+    final t = Uint8List.fromList(u);
+    for (var c = 1; c < iterations; c++) {
+      u = Uint8List.fromList(hmac.convert(u).bytes);
+      for (var j = 0; j < hLen; j++) {
+        t[j] ^= u[j];
+      }
+    }
+    out.setRange((i - 1) * hLen, i * hLen, t);
+  }
+  return Uint8List.sublistView(out, 0, dkLen);
+}
+
+/// Isolate entry-point consumed by [compute]. Delegates to
+/// [pbkdf2HmacSha256]; the only reason it exists is so [compute] has a
+/// single-argument function to call.
+Uint8List _pbkdf2Isolate(_Pbkdf2Args args) => pbkdf2HmacSha256(
+  password: args.password,
+  salt: args.salt,
+  iterations: args.iterations,
+  dkLen: args.dkLen,
+);
+
+class _Pbkdf2Args {
+  _Pbkdf2Args({
+    required this.password,
+    required this.salt,
+    required this.iterations,
+    required this.dkLen,
+  });
+
+  final List<int> password;
+  final List<int> salt;
+  final int iterations;
+  final int dkLen;
 }

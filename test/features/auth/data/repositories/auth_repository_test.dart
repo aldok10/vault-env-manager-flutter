@@ -183,4 +183,74 @@ void main() {
       expect(result.isLeft(), true);
     });
   });
+
+  // PBKDF2-HMAC-SHA256 correctness is the foundation of the v2 scheme: a
+  // subtle bug here (wrong endianness, off-by-one on iterations, bad XOR
+  // order) would silently produce a different derived key and lock every
+  // install out of their vault on upgrade. These RFC 6070 / RFC 7914
+  // adjacent test vectors pin the implementation to the standard output.
+  group('pbkdf2HmacSha256 (RFC 6070-style vectors)', () {
+    // Vector 1 — RFC 7914 appendix-style SHA-256 vector.
+    //   P = "password", S = "salt", c = 1, dkLen = 32
+    test('c=1, dkLen=32, password="password", salt="salt"', () {
+      final out = pbkdf2HmacSha256(
+        password: utf8.encode('password'),
+        salt: utf8.encode('salt'),
+        iterations: 1,
+        dkLen: 32,
+      );
+      expect(
+        _hex(out),
+        '120fb6cffcf8b32c43e7225256c4f837'
+        'a86548c92ccc35480805987cb70be17b',
+      );
+    });
+
+    // Vector 2 — c=2 exercises the XOR accumulation path.
+    test('c=2, dkLen=32', () {
+      final out = pbkdf2HmacSha256(
+        password: utf8.encode('password'),
+        salt: utf8.encode('salt'),
+        iterations: 2,
+        dkLen: 32,
+      );
+      expect(
+        _hex(out),
+        'ae4d0c95af6b46d32d0adff928f06dd0'
+        '2a303f8ef3c251dfd6e2d85a95474c43',
+      );
+    });
+
+    // Vector 3 — multi-block output (dkLen=40 → two blocks).
+    test('c=4096, dkLen=40 (multi-block)', () {
+      final out = pbkdf2HmacSha256(
+        password: utf8.encode('passwordPASSWORDpassword'),
+        salt: utf8.encode('saltSALTsaltSALTsaltSALTsaltSALTsalt'),
+        iterations: 4096,
+        dkLen: 40,
+      );
+      expect(
+        _hex(out),
+        '348c89dbcbd32b2f32d814b8116e84cf'
+        '2b17347ebc1800181c4e2a1fb8dd53e1'
+        'c635518c7dac47e9',
+      );
+    });
+
+    test('dkLen=0 returns an empty list (edge case)', () {
+      // The implementation must not crash or produce non-empty output
+      // when dkLen is 0. The auth repository guards against this at the
+      // caller layer; this test documents the primitive's own behaviour.
+      final out = pbkdf2HmacSha256(
+        password: utf8.encode('password'),
+        salt: utf8.encode('salt'),
+        iterations: 10,
+        dkLen: 0,
+      );
+      expect(out, isEmpty);
+    });
+  });
 }
+
+String _hex(List<int> bytes) =>
+    bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
