@@ -64,15 +64,17 @@ jobs:
             family: windows
             arch: x64
             flutter_arch_dir: x64
-          - target: windows-arm64
-            os: windows-11-arm
-            family: windows
-            arch: arm64
-            flutter_arch_dir: arm64
-            # Same story as Linux arm64: Windows Flutter SDK prebuilts are
-            # x64-only. Clone from git and rely on Flutter's own update_
-            # dart_sdk.ps1 to fetch the arm64 Dart SDK on first invocation.
-            flutter_install: git
+          # NOTE: windows-arm64 is intentionally excluded.
+          # Flutter 3.41.7 stable ships only x64 Windows desktop tooling — when
+          # `flutter build windows` runs on an ARM64 host it downloads the x64
+          # toolchain and cross-compiles to x64 binaries. The transitive `jni`
+          # plugin then tries to link against the ARM64 JVM from the hosted Java
+          # toolcache (Temurin Hotspot aarch64/lib/jvm.lib), producing
+          # `LNK4272: library machine type 'ARM64' conflicts with target
+          # machine type 'x64'` and an unresolved __imp_JNI_CreateJavaVM
+          # symbol. Windows users on ARM64 should install the x64 `.exe`
+          # setup under Windows-on-ARM's x64 emulation until Flutter ships
+          # native ARM64 Windows support.
           # -------- macOS --------
           # macos-14 is the Apple Silicon (arm64) hosted runner;
           # macos-13 is the last Intel (x86_64) hosted runner that Flutter
@@ -151,9 +153,10 @@ jobs:
       - name: Install Inno Setup (Windows)
         if: matrix.family == 'windows'
         shell: pwsh
-        # windows-latest ships Inno Setup 6 preinstalled; windows-11-arm may
-        # not. Install-or-skip via chocolatey covers both runners and is a
-        # no-op when iscc is already on PATH.
+        # windows-latest ships Inno Setup 6 preinstalled; on a fresh runner
+        # chocolatey is used as a fallback. $GITHUB_PATH only propagates to
+        # *subsequent* steps, so $env:PATH is also updated in-process here
+        # to let the trailing Get-Command sanity check resolve iscc.
         run: |
           $ErrorActionPreference = 'Stop'
           $iscc = Get-Command iscc -ErrorAction SilentlyContinue
@@ -163,6 +166,7 @@ jobs:
           $inno = 'C:\Program Files (x86)\Inno Setup 6'
           if (Test-Path $inno) {
             "$inno" | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
+            $env:PATH = "$inno;$env:PATH"
           }
           Get-Command iscc | Format-List Name, Source
 
