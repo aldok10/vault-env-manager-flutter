@@ -86,6 +86,28 @@ jobs:
             libgtk-3-dev liblzma-dev libstdc++-12-dev \
             libsecret-1-dev libjsoncpp-dev
 
+      - name: Disable Xcode code signing for CI (macOS only)
+        if: matrix.target == 'macos'
+        shell: bash
+        # The tracked Xcode project pins a DEVELOPMENT_TEAM and manual signing
+        # on the Runner Release config, which makes `flutter build macos` try
+        # to pull a provisioning profile that does not exist on public GitHub
+        # runners. Patch the project.pbxproj only on the CI runner to strip
+        # the team and force unsigned ad-hoc builds. Release signing for
+        # production still lives in `flutter_release.yml` on tag pushes.
+        run: |
+          set -euo pipefail
+          PBXPROJ=macos/Runner.xcodeproj/project.pbxproj
+          /usr/bin/sed -i.bak \
+            -e '/DEVELOPMENT_TEAM = /d' \
+            -e '/PROVISIONING_PROFILE_SPECIFIER = /d' \
+            -e 's/CODE_SIGN_STYLE = Manual;/CODE_SIGN_STYLE = Automatic;/g' \
+            -e 's|"CODE_SIGN_IDENTITY\[sdk=macosx\*\]" = "Apple Development";|"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";|g' \
+            "$PBXPROJ"
+          rm -f "$PBXPROJ.bak"
+          echo "--- signing-related lines after patch ---"
+          grep -nE "CODE_SIGN|DEVELOPMENT_TEAM|PROVISIONING_PROFILE" "$PBXPROJ" || true
+
       - name: Materialize runtime env file
         # Write the runtime .env asset from the APP_ENV_FILE secret when provided; otherwise
         # fall back to the tracked example so analyzer/build still succeed for forks and PRs.
@@ -119,14 +141,6 @@ jobs:
           # Public build metadata injected as Dart compile-time constants.
           APP_BUILD_NUMBER: ${{ github.run_number }}
           APP_GIT_SHA: ${{ github.sha }}
-          # Disable Xcode code signing for unsigned macOS CI builds. Xcode
-          # picks these up automatically when running under `flutter build
-          # macos` (which delegates to xcodebuild under the hood). No effect
-          # on Linux/Windows runs.
-          CODE_SIGN_IDENTITY: ""
-          CODE_SIGNING_REQUIRED: "NO"
-          CODE_SIGNING_ALLOWED: "NO"
-          DEVELOPMENT_TEAM: ""
         shell: bash
         run: |
           ${{ matrix.build_cmd }} \
