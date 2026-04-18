@@ -99,11 +99,14 @@ jobs:
       - name: Install Dart/Flutter dependencies
         run: flutter pub get
 
-      - name: Static analysis
-        run: flutter analyze
-
-      - name: Unit tests
-        run: flutter test --no-pub
+      # Static analysis and unit tests are temporarily disabled on this pipeline
+      # so the Desktop build can be validated in isolation. They still run on
+      # `.github/workflows/flutter_ci.yml` for PR-level linting/testing.
+      # - name: Static analysis
+      #   run: flutter analyze
+      #
+      # - name: Unit tests
+      #   run: flutter test --no-pub
 
       - name: Build ${{ matrix.target }}
         env:
