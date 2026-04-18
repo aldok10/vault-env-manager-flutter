@@ -23,7 +23,7 @@ class AuthThemeToggle extends StatelessWidget {
         child: Obx(
           () => IconButton(
             icon: Icon(
-              config.themeMode.value == 'Dark'
+              config.themeMode.value == 'dark'
                   ? CupertinoIcons.sun_max_fill
                   : CupertinoIcons.moon_stars_fill,
               color: SeraphineColors.of(context).textPrimary,
@@ -31,10 +31,10 @@ class AuthThemeToggle extends StatelessWidget {
             ),
             onPressed: () {
               final newMode =
-                  config.themeMode.value == 'Dark' ? 'Light' : 'Dark';
+                  config.themeMode.value == 'dark' ? 'light' : 'dark';
               config.setThemeMode(newMode);
               Get.changeThemeMode(
-                newMode == 'Dark' ? ThemeMode.dark : ThemeMode.light,
+                newMode == 'dark' ? ThemeMode.dark : ThemeMode.light,
               );
             },
           ),
