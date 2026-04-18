@@ -481,8 +481,7 @@ jobs:
             | --- | --- | --- | --- |
             | Linux x86_64 | `${{ env.APP_NAME }}-*-linux-amd64.deb` | `${{ env.APP_NAME }}-*-linux-amd64.tar.gz` | `sudo dpkg -i …deb` (deps: libgtk-3-0, libsecret-1-0, libjsoncpp*). |
             | Linux arm64 | `${{ env.APP_NAME }}-*-linux-arm64.deb` | `${{ env.APP_NAME }}-*-linux-arm64.tar.gz` | Same, on aarch64 hosts. |
-            | Windows x64 | `${{ env.APP_NAME }}-*-windows-x64-setup.exe` | `${{ env.APP_NAME }}-*-windows-x64.zip` | Inno Setup installer with Start Menu + Add/Remove integration. |
-            | Windows arm64 | `${{ env.APP_NAME }}-*-windows-arm64-setup.exe` | `${{ env.APP_NAME }}-*-windows-arm64.zip` | Native ARM64, no emulation. |
+            | Windows x64 (incl. Windows-on-ARM via x64 emulation) | `${{ env.APP_NAME }}-*-windows-x64-setup.exe` | `${{ env.APP_NAME }}-*-windows-x64.zip` | Inno Setup installer with Start Menu + Add/Remove integration. `ArchitecturesAllowed=x64compatible` so ARM64 Windows hosts accept the installer and run the app under the built-in x64 emulator. |
             | macOS Apple Silicon | `${{ env.APP_NAME }}-*-macos-arm64.pkg` | `.dmg`, `.zip` | Ad-hoc signed. First launch: right-click → Open, or run `FIX-GATEKEEPER.command` inside the `.dmg`. |
             | macOS Intel | `${{ env.APP_NAME }}-*-macos-x64.pkg` | `.dmg`, `.zip` | Same ad-hoc caveat. |
 

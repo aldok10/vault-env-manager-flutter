@@ -27,6 +27,17 @@
 #define OutputBase "vault-env-manager-" + AppVersion + "-ci." + BuildNumber + "-windows-" + Arch + "-setup"
 #endif
 
+; Inno Setup 6.1+ uses `x64compatible` as the canonical token for "64-bit
+; Windows that can run x64 binaries", which includes both native x64 hosts
+; and Windows-on-ARM hosts running x64 code under the built-in emulator.
+; The raw `x64` token only matches genuine x64 editions and would reject
+; ARM64 Windows — breaking the documented Windows-on-ARM install path.
+#if Arch == "x64"
+  #define ArchCompat "x64compatible"
+#else
+  #define ArchCompat Arch
+#endif
+
 [Setup]
 AppId={{8F1C9B1A-3F5E-4B9A-9B6E-VAULTENVMGR01}}
 AppName=Vault Env Manager
@@ -40,8 +51,9 @@ DefaultDirName={autopf}\VaultEnvManager
 DefaultGroupName=Vault Env Manager
 DisableProgramGroupPage=yes
 ; Produce per-arch binaries. x64 / arm64 installers target 64-bit mode.
-ArchitecturesInstallIn64BitMode={#Arch}
-ArchitecturesAllowed={#Arch}
+; See ArchCompat definition above for the Windows-on-ARM rationale.
+ArchitecturesInstallIn64BitMode={#ArchCompat}
+ArchitecturesAllowed={#ArchCompat}
 OutputDir=dist
 OutputBaseFilename={#OutputBase}
 Compression=lzma2/max

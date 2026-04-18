@@ -57,7 +57,7 @@ See the full architectural charter in [`AGENT.md`](AGENT.md).
 | --- | --- | --- |
 | Linux | `amd64`, `arm64` | `.deb` + `.tar.gz` |
 | Windows | `x64` (Windows-on-ARM runs the x64 setup via emulation) | Inno Setup `.exe` + `.zip` portable |
-| macOS | Apple Silicon (`arm64`), Intel (`x86_64`) | `.pkg` + `.dmg` + `.zip` |
+| macOS | Apple Silicon (`arm64`), Intel (`x64`) | `.pkg` + `.dmg` + `.zip` |
 
 Every push to `main` triggers the full 5-target matrix build and publishes a [GitHub Release](https://github.com/aldok10/vault-env-manager-flutter/releases) with all platform bundles attached. Native Windows-on-ARM builds are parked until Flutter ships ARM64 desktop tooling — see the note in [`docs/CI.md`](docs/CI.md).
 
@@ -107,7 +107,7 @@ For Release builds and native installers, see [`docs/BUILD.md`](docs/BUILD.md).
 Grab the matching installer from the latest [GitHub Release](https://github.com/aldok10/vault-env-manager-flutter/releases):
 
 - **Linux (amd64 / arm64)** → `*-linux-<arch>.deb` → `sudo dpkg -i <file>.deb` (falls back to `*.tar.gz`).
-- **Windows (x64 / arm64)** → `*-windows-<arch>-setup.exe` → double-click, the Inno Setup wizard handles Start Menu + Add/Remove Programs entries (falls back to `*.zip`).
+- **Windows (x64)** → `*-windows-x64-setup.exe` → double-click, the Inno Setup wizard handles Start Menu + Add/Remove Programs entries (falls back to `*.zip`). Windows-on-ARM runs the x64 installer under the built-in x64 emulator (`ArchitecturesAllowed=x64compatible`).
 - **macOS (Apple Silicon / Intel)** → `*-macos-<arch>.pkg` → double-click to install into `/Applications`. If Gatekeeper blocks the first launch, run `FIX-GATEKEEPER.command` inside the bundled `.dmg` or right-click the app → Open → Open.
 
 Full details per platform, including dependency list and verification commands, live in [`docs/INSTALL.md`](docs/INSTALL.md).

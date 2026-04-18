@@ -39,7 +39,7 @@ vault-env-manager-<semver>-ci.<run_number>-<platform>-<arch>[-setup].<ext>
 | `<semver>` | `1.0.1` | `pubspec.yaml` version (without build code). |
 | `ci.<run_number>` | `ci.42` | GitHub Actions run number — acts as build identifier. |
 | `<platform>` | `linux`, `windows`, `macos` | OS family. |
-| `<arch>` | `amd64`, `arm64`, `x64`, `x86_64` | Target CPU. |
+| `<arch>` | `amd64`, `arm64`, `x64` | Target CPU (Linux uses `amd64`/`arm64`, Windows uses `x64`, macOS uses `arm64`/`x64`). |
 | `-setup` | optional | Present only on the Windows Inno Setup installer. |
 | `<ext>` | `.deb`, `.tar.gz`, `.exe`, `.zip`, `.pkg`, `.dmg` | Package format. |
 
@@ -56,7 +56,7 @@ Example: `vault-env-manager-1.0.1-ci.42-macos-arm64.pkg`.
 | Windows 10/11 (x64) | `*-windows-x64-setup.exe` | `*-windows-x64.zip` |
 | Windows on ARM | `*-windows-x64-setup.exe` under x64 emulation | `*-windows-x64.zip` |
 | macOS Apple Silicon | `*-macos-arm64.pkg` | `*-macos-arm64.dmg` or `.zip` |
-| macOS Intel | `*-macos-x86_64.pkg` | `*-macos-x86_64.dmg` or `.zip` |
+| macOS Intel | `*-macos-x64.pkg` | `*-macos-x64.dmg` or `.zip` |
 
 ---
 
@@ -131,7 +131,7 @@ Native Windows ARM64 builds are not produced yet (Flutter 3.41.7 has no Windows 
 
 ### `.pkg` (recommended)
 
-1. Download the matching `.pkg` for the CPU architecture (`arm64` for Apple Silicon, `x86_64` for Intel).
+1. Download the matching `.pkg` for the CPU architecture (`arm64` for Apple Silicon, `x64` for Intel).
 2. Double-click → Installer runs the standard wizard → the app lands in `/Applications/vault_env_manager.app`.
 3. On first launch Gatekeeper will still prompt: right-click → **Open** → **Open** in the confirmation sheet. This whitelists the bundle for future launches.
 
@@ -143,16 +143,12 @@ The `.pkg` is **pkgbuild**-generated and ships the Info.plist bundle identifier 
 2. Drag `vault_env_manager.app` into `/Applications` (the `.dmg` shows the standard Applications shortcut).
 3. If macOS reports **"app is damaged and can't be opened"** or **"Apple could not verify …"**, either:
    - Right-click the app → **Open** → **Open** in the confirmation sheet, or
-   - Double-click `FIX-GATEKEEPER.command` inside the mounted `.dmg` volume. The helper runs:
-     ```bash
-     xattr -cr /Applications/vault_env_manager.app
-     ```
-     which strips the `com.apple.quarantine` attribute Safari / Chrome add to every download. Source: [`tooling/macos/fix-gatekeeper.command`](../tooling/macos/fix-gatekeeper.command).
+   - Double-click `FIX-GATEKEEPER.command` inside the mounted `.dmg` volume. The helper resolves the installed `.app` in this order — `/Applications/vault_env_manager.app`, `$HOME/Applications/vault_env_manager.app`, then any `.app` sitting next to the script — and runs `/usr/bin/xattr -cr` against every match, so the workflow "drag to /Applications, then run the helper" scrubs the right copy. Source: [`tooling/macos/fix-gatekeeper.command`](../tooling/macos/fix-gatekeeper.command).
 
 ### `.zip` fallback
 
 ```bash
-unzip vault-env-manager-<semver>-ci.<run>-macos-<arch>.zip -d /Applications
+unzip vault-env-manager-<semver>-ci.<run>-macos-<arch>.zip -d /Applications   # <arch> = arm64 or x64
 xattr -cr /Applications/vault_env_manager.app
 open /Applications/vault_env_manager.app
 ```

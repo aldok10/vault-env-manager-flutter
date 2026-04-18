@@ -9,29 +9,48 @@
 # attribute allows Gatekeeper to treat the bundle as trusted for the
 # current user.
 #
-# Double-click this file from inside the mounted `.dmg` or next to
-# the extracted `.app`. It looks for the nearest `.app` bundle and
-# runs `xattr -cr` against it.
+# Resolution order:
+#   1. /Applications/vault_env_manager.app          (standard install path)
+#   2. $HOME/Applications/vault_env_manager.app     (per-user install)
+#   3. nearest *.app bundle up to 3 levels below    (portable / .dmg workflow)
 # ------------------------------------------------------------------
 set -e
 
-cd "$(dirname "$0")"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+TARGETS=()
 
-APP="$(find . -maxdepth 3 -name '*.app' -type d 2>/dev/null | head -n 1)"
+# Prefer the copies a user drags out of the .dmg into /Applications — this
+# is the path docs/INSTALL.md documents. Keep going past the first match so
+# the per-user install location gets cleaned too when both exist.
+for candidate in \
+  "/Applications/vault_env_manager.app" \
+  "${HOME}/Applications/vault_env_manager.app"; do
+  if [ -d "${candidate}" ]; then
+    TARGETS+=("${candidate}")
+  fi
+done
 
-if [ -z "${APP}" ]; then
-  echo "ERROR: No .app bundle found next to this script."
-  echo "Move this file next to vault_env_manager.app (or run it from"
-  echo "inside the mounted .dmg volume) and try again."
+# Fallback: anything sitting next to the script (portable + .dmg workflows).
+NEARBY="$(find "${SCRIPT_DIR}" -maxdepth 3 -name '*.app' -type d 2>/dev/null | head -n 1 || true)"
+if [ -n "${NEARBY}" ]; then
+  TARGETS+=("${NEARBY}")
+fi
+
+if [ "${#TARGETS[@]}" -eq 0 ]; then
+  echo "ERROR: No Vault Env Manager .app bundle found."
+  echo ""
+  echo "Drag vault_env_manager.app into /Applications first (or place"
+  echo "this script next to the portable .app), then run the helper again."
   read -n 1 -s -r -p "Press any key to close..."
   exit 1
 fi
 
-echo "Found app bundle: ${APP}"
-echo "Stripping quarantine attribute..."
-/usr/bin/xattr -cr "${APP}"
+for APP in "${TARGETS[@]}"; do
+  echo "Stripping quarantine attribute from: ${APP}"
+  /usr/bin/xattr -cr "${APP}"
+done
 
 echo ""
-echo "Done. You can now open ${APP} normally (double-click, or via Finder)."
+echo "Done. Launch Vault Env Manager normally from /Applications or Finder."
 echo ""
 read -n 1 -s -r -p "Press any key to close..."

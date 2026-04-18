@@ -15,7 +15,7 @@ See also: [`BUILD.md`](BUILD.md) · [`INSTALL.md`](INSTALL.md) · [`CI.md`](CI.m
 - [4. Per-OS Native Prerequisites](#4-per-os-native-prerequisites)
   - [Linux (x64 / arm64)](#linux-x64--arm64)
   - [Windows (x64)](#windows-x64)
-  - [macOS (arm64 / x86_64)](#macos-arm64--x86_64)
+  - [macOS (arm64 / x64)](#macos-arm64--x64)
 - [5. IDE Setup](#5-ide-setup)
 - [6. Verify the Setup](#6-verify-the-setup)
 - [Troubleshooting](#troubleshooting)
@@ -128,7 +128,7 @@ On Fedora / RHEL, substitute `dnf install @development-tools gtk3-devel libsecre
 
 Windows ARM64 as a **build target** is not supported by Flutter 3.41.7 — see [`CI.md`](CI.md) for the link-time failure. Windows-on-ARM machines run the x64 setup via emulation.
 
-### macOS (arm64 / x86_64)
+### macOS (arm64 / x64)
 
 1. **Xcode 15+** from the App Store. Launch once, accept the license, and install the command-line tools:
    ```bash
