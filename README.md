@@ -1,98 +1,164 @@
-# 🛡️ Vault Env Manager (V5.0)
+# Vault Env Manager
 
-[![Flutter](https://img.shields.io/badge/Flutter-3.x-blue.svg)](https://flutter.dev)
+[![Desktop Build](https://github.com/aldok10/vault-env-manager-flutter/actions/workflows/build.yml/badge.svg)](https://github.com/aldok10/vault-env-manager-flutter/actions/workflows/build.yml)
+[![Flutter](https://img.shields.io/badge/Flutter-3.41.7-blue.svg)](https://flutter.dev)
+[![Dart](https://img.shields.io/badge/Dart-%5E3.11.4-0175C2.svg)](https://dart.dev)
 [![Architecture](https://img.shields.io/badge/Architecture-Clean--Feature-green.svg)](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
 [![Security](https://img.shields.io/badge/Security-AES--GCM--256-red.svg)](https://en.wikipedia.org/wiki/Galois/Counter_Mode)
-[![License](https://img.shields.io/badge/License-Proprietary-black.svg)](#)
+[![License](https://img.shields.io/badge/License-Proprietary-black.svg)](#license)
 
-**Vault Env Manager** is an elite, industrial-grade desktop application designed for secure environment variable management. Built on the "Sam-Sam" standard, it combines **Industrial-Grade Security** with a **Premium Apple-Inspired UI/UX**.
+**Vault Env Manager** is an industrial-grade Flutter desktop application for secure environment variable management. It combines AES-GCM authenticated encryption, PBKDF2 key derivation, and OS-native secure storage with an Apple-inspired UI that targets Linux, Windows, and macOS on both x86_64 and arm64.
+
+> Looking for a quick start? Jump straight to [Developer Setup](docs/SETUP.md) or the [End-User Install Guide](docs/INSTALL.md).
 
 ---
 
-## 🏛️ Core Pillars
+## Table of Contents
+
+- [Core Pillars](#core-pillars)
+- [Supported Platforms](#supported-platforms)
+- [Documentation Map](#documentation-map)
+- [Quick Start (Developer)](#quick-start-developer)
+- [Quick Start (End User)](#quick-start-end-user)
+- [Repository Layout](#repository-layout)
+- [Scripts](#scripts)
+- [Contributing](#contributing)
+- [License](#license)
+
+---
+
+## Core Pillars
 
 ### 1. Industrial-Grade Security
-Built for high-stakes environments where data integrity and privacy are non-negotiable.
-- **AES-GCM (256-bit)**: Galois/Counter Mode for authenticated encryption, ensuring both confidentiality and authenticity.
-- **PBKDF2 Derivation**: HMAC-SHA256 with 100,000 iterations for bulletproof key derivation from master passwords.
-- **macOS Keychain**: Native platform-secure persistence for sensitive tokens and keys.
-- **Isolate-Offloaded**: Heavy cryptographic operations are offloaded to background threads to ensure zero UI jank.
+- **AES-GCM (256-bit)** authenticated encryption via `package:cryptography`.
+- **PBKDF2 / HMAC-SHA256** with 100,000 iterations for master-key derivation.
+- **OS-native secret storage**: macOS Keychain, GNOME libsecret on Linux, Windows Credential Manager.
+- Heavy crypto offloaded to Dart `Isolate`s so the UI stays at 120 fps.
 
-### 2. Premium UI/UX (Pro Max)
-A "Wowed at first glance" experience following Apple's Human Interface Guidelines.
-- **G2/G3 Continuity**: Squircle corners (`SmoothRectangleBorder`) with 14.0 radius and 0.6 smoothing.
-- **Vibrant Glassmorphism**: High-blur backdrops with saturation-boosted overlays.
-- **Micro-Animations**: Purposeful, 250-300ms transitions for a "living" interface.
-- **San Francisco Typography**: Precise typographic hierarchies for maximum legibility.
+### 2. Apple-Inspired Premium UI/UX
+- Squircle surfaces (`SmoothRectangleBorder`, radius 14.0 / smoothing 0.6).
+- High-blur glassmorphism with saturated overlays.
+- 250–300 ms micro-animations powered by `flutter_animate`.
+- San Francisco typographic hierarchy and 44pt minimum tap targets.
 
 ### 3. Feature-Oriented Clean Architecture
-Standardized on the **Result Pattern** and strict layer separation.
-- **Domain**: Pure Dart business logic, models, and interfaces.
-- **Data**: Infrastructure implementation via repository interfaces.
-- **Presentation**: GetX-powered reactive UI decoupled from data implementations.
-- **DI Mastery**: 3-Tier dependency injection for performance and testability.
+- Strict `domain` / `data` / `presentation` separation per feature.
+- `Either<Failure, T>` result pattern via `dartz`.
+- GetX-powered reactive state and persistent `GetxService` registry.
+- 3-tier dependency injection (sync services → async services → feature bindings).
+
+See the full architectural charter in [`AGENT.md`](AGENT.md).
 
 ---
 
-## 🚀 Feature Matrix
+## Supported Platforms
 
-| Feature | Status | Description |
-| :--- | :--- | :--- |
-| **Workbench** | `🟢 ACTIVE` | Visual editor for environment variables with multi-vault support. |
-| **Vault Auth** | `🟢 ACTIVE` | Secure entry with PBKDF2-derived master key validation. |
-| **Secure Logic** | `🟢 ACTIVE` | AES-GCM encryption/decryption in background isolates. |
-| **Settings** | `🟢 ACTIVE` | Global configuration and theme management. |
-| **Automation** | `🟡 PENDING` | CI/CD build versioning and wiki generation. |
+| Platform | Architectures | Installer shipped |
+| --- | --- | --- |
+| Linux | `amd64`, `arm64` | `.deb` + `.tar.gz` |
+| Windows | `x64` (Windows-on-ARM runs the x64 setup via emulation) | Inno Setup `.exe` + `.zip` portable |
+| macOS | Apple Silicon (`arm64`), Intel (`x64`) | `.pkg` + `.dmg` + `.zip` |
+
+Every push to `main` triggers the full 5-target matrix build and publishes a [GitHub Release](https://github.com/aldok10/vault-env-manager-flutter/releases) with all platform bundles attached. Native Windows-on-ARM builds are parked until Flutter ships ARM64 desktop tooling — see the note in [`docs/CI.md`](docs/CI.md).
 
 ---
 
-## 🛠️ Technical Deep Dive
+## Documentation Map
 
-### Security Primitive (V5.1)
-```dart
-// Example: Secure Payload Encryption
-final cipher = AesGcm.with256bits();
-final nonce = Uint8List.fromList(SecureRandom().nextBytes(12));
-final encrypted = await cipher.encrypt(
-  payload, 
-  secretKey: masterKey, 
-  nonce: nonce,
-);
+| Document | When to read it |
+| --- | --- |
+| [`docs/SETUP.md`](docs/SETUP.md) | First-time setup of the Flutter toolchain and per-OS prerequisites. |
+| [`docs/BUILD.md`](docs/BUILD.md) | Running Debug builds, producing Release artifacts, packaging installers locally. |
+| [`docs/INSTALL.md`](docs/INSTALL.md) | End-user install instructions for `.deb`, `.exe`, `.pkg`, `.dmg` (including the macOS Gatekeeper helper). |
+| [`docs/CI.md`](docs/CI.md) | How the `.github/workflows/build.yml` pipeline works and which secrets it consumes. |
+| [`AGENT.md`](AGENT.md) | Institutional knowledge, architectural rules, coding standards. |
+| [`WIKI.md`](WIKI.md) | Generated feature-by-feature wiki. |
+
+---
+
+## Quick Start (Developer)
+
+Prerequisites checked in [`docs/SETUP.md`](docs/SETUP.md). The TL;DR:
+
+```bash
+git clone https://github.com/aldok10/vault-env-manager-flutter.git
+cd vault-env-manager-flutter
+
+# One-time: pick up the pinned Flutter SDK (3.41.7, Dart ^3.11.4).
+flutter --version
+
+# Resolve dependencies and the platform-specific desktop scaffolding.
+flutter pub get
+flutter config --enable-linux-desktop --enable-windows-desktop --enable-macos-desktop
+
+# Copy the runtime env template — edit before first launch if needed.
+cp assets/.env.example assets/.env
+
+# Launch in Debug mode on the current host platform.
+flutter run -d linux   # or: -d windows, -d macos
 ```
 
-### Performance Budget
-- **Startup Time**: < 800ms (Desktop).
-- **Frame Target**: Stable 120 FPS via Isolate offloading.
-- **Security Latency**: < 5ms encryption overhead per 10KB payload.
+For Release builds and native installers, see [`docs/BUILD.md`](docs/BUILD.md).
 
 ---
 
-## 🏁 Getting Started
+## Quick Start (End User)
 
-### Prerequisites
-- **Flutter**: 3.x+
-- **macOS**: 13.0+ (for native keychain/local_auth)
-- **Dart**: ^3.11.4
+Grab the matching installer from the latest [GitHub Release](https://github.com/aldok10/vault-env-manager-flutter/releases):
 
-### Installation
-1.  **Clone the Repository**:
-    ```bash
-    git clone https://github.com/your-org/vault_env_manager.git
-    ```
-2.  **Synchronize Dependencies**:
-    ```bash
-    flutter pub get
-    ```
-3.  **Run Pre-flight Checks**:
-    ```bash
-    flutter analyze && flutter test
-    ```
-4.  **Launch the Workbench**:
-    ```bash
-    flutter run -d macos
-    ```
+- **Linux (amd64 / arm64)** → `*-linux-<arch>.deb` → `sudo dpkg -i <file>.deb` (falls back to `*.tar.gz`).
+- **Windows (x64)** → `*-windows-x64-setup.exe` → double-click, the Inno Setup wizard handles Start Menu + Add/Remove Programs entries (falls back to `*.zip`). Windows-on-ARM runs the x64 installer under the built-in x64 emulator (`ArchitecturesAllowed=x64compatible`).
+- **macOS (Apple Silicon / Intel)** → `*-macos-<arch>.pkg` → double-click to install into `/Applications`. If Gatekeeper blocks the first launch, run `FIX-GATEKEEPER.command` inside the bundled `.dmg` or right-click the app → Open → Open.
+
+Full details per platform, including dependency list and verification commands, live in [`docs/INSTALL.md`](docs/INSTALL.md).
 
 ---
 
-## ⚖️ License
-This project is proprietary. All rights reserved. 2026.
+## Repository Layout
+
+```text
+.
+├── lib/src/
+│   ├── core/            # App-wide services (storage, crypto, compute, DI)
+│   ├── features/        # Feature modules: auth, workbench, settings, …
+│   │   └── <feature>/{domain,data,presentation}
+│   └── shared/          # Atomic/molecular/organism widgets and shared utils
+├── assets/              # Fonts, runtime .env.example, static media
+├── android/ ios/        # Mobile shells (not part of the desktop CI)
+├── linux/ windows/ macos/
+│                        # Native runner scaffolding (CMake / Xcode)
+├── installer/windows/   # Inno Setup script compiled in CI
+├── tooling/macos/       # Gatekeeper helper bundled into the .dmg
+├── .github/workflows/   # build.yml (desktop matrix), flutter_release.yml (tagged)
+├── docs/                # Developer + end-user guides
+└── pubspec.yaml
+```
+
+---
+
+## Scripts
+
+Helper scripts live under `bin/`:
+
+| Script | Purpose |
+| --- | --- |
+| `bin/version_bump.dart` | Increment `pubspec.yaml` version + build number. |
+| `bin/wiki_gen.dart` | Regenerate `WIKI.md` from source annotations. |
+
+Run any of them via `dart run bin/<name>.dart`.
+
+---
+
+## Contributing
+
+- Follow the architecture and coding standards laid out in [`AGENT.md`](AGENT.md).
+- Keep source files **under 200 lines** where practical (Rule of 200).
+- All async side effects must return `Either<Failure, T>` from `dartz`.
+- Test robots (`test/robots/`) use the AAA pattern for UI widget coverage.
+- Before opening a PR, run `flutter analyze` and `flutter test` locally. CI has analysis and tests temporarily disabled while the desktop pipeline is stabilised — they **must** be re-enabled in at least one workflow before merging feature work to `main` (see [`docs/CI.md`](docs/CI.md)).
+
+---
+
+## License
+
+Proprietary. All rights reserved © 2026.
