@@ -305,10 +305,13 @@ jobs:
             Write-Error "Expected Flutter Windows Release dir at $releaseDir"
           }
           $outputBase = "$env:APP_NAME-$env:VERSION_TAG-windows-$env:ARCH-setup"
-          # Inno Setup expects an absolute path for BuildDir so CI relative
-          # paths work regardless of runner working directory.
+          # Inno Setup resolves BuildDir / OutputDir relative to the .iss
+          # file unless an absolute path is supplied, so hand iscc absolute
+          # paths for both the source Release dir and the output dist dir.
           $absReleaseDir = (Resolve-Path $releaseDir).Path
+          $absDistDir = (Resolve-Path 'dist').Path
           & iscc `
+            "/O$absDistDir" `
             "/DAppVersion=$env:APP_VERSION" `
             "/DBuildNumber=${{ github.run_number }}" `
             "/DArch=$env:ARCH" `
