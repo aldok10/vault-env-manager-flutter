@@ -100,9 +100,8 @@ void main() {
 
         // Check that keys are statistically different (not just shifted)
         // Extract the byte arrays
-        final keyBytes = keys
-            .map((k) => base64Url.decode(k.substring(7)))
-            .toList();
+        final keyBytes =
+            keys.map((k) => base64Url.decode(k.substring(7))).toList();
 
         // Calculate average Hamming distance between keys
         int totalDistance = 0;

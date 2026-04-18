@@ -32,8 +32,7 @@ class SeraphineAppBar extends StatelessWidget implements PreferredSizeWidget {
         cornerRadius: 18,
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: NavigationToolbar(
-          leading:
-              leading ??
+          leading: leading ??
               (showBackButton && Get.previousRoute.isNotEmpty
                   ? IconButton(
                       icon: Icon(

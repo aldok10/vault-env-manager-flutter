@@ -49,23 +49,25 @@ class SeraphineText extends StatelessWidget {
     String text, {
     Color? color,
     TextAlign? textAlign,
-  }) => SeraphineText(
-    text,
-    style: SeraphineTypography.bodyMedium,
-    color: color,
-    textAlign: textAlign,
-  );
+  }) =>
+      SeraphineText(
+        text,
+        style: SeraphineTypography.bodyMedium,
+        color: color,
+        textAlign: textAlign,
+      );
 
   factory SeraphineText.label(
     String text, {
     Color? color,
     TextAlign? textAlign,
-  }) => SeraphineText(
-    text,
-    style: SeraphineTypography.label,
-    color: color,
-    textAlign: textAlign,
-  );
+  }) =>
+      SeraphineText(
+        text,
+        style: SeraphineTypography.label,
+        color: color,
+        textAlign: textAlign,
+      );
 
   @override
   Widget build(BuildContext context) {

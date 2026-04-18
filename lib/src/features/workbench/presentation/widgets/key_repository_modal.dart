@@ -35,9 +35,8 @@ class KeyRepositoryModal extends GetView<WorkbenchController> {
                 color: SeraphineColors.of(
                   context,
                 ).surface.withValues(alpha: 0.9),
-                borderRadius: isMobile
-                    ? BorderRadius.zero
-                    : SeraphineSpacing.radiusLG,
+                borderRadius:
+                    isMobile ? BorderRadius.zero : SeraphineSpacing.radiusLG,
                 border: isMobile
                     ? null
                     : Border.all(color: SeraphineColors.of(context).border),

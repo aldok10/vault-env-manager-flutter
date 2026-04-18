@@ -82,12 +82,10 @@ class LineDiff {
     String newText,
   ) {
     final diff = computeFull(oldText, newText);
-    final additions = diff
-        .where((d) => d.operation == DiffOperation.insert)
-        .length;
-    final deletions = diff
-        .where((d) => d.operation == DiffOperation.delete)
-        .length;
+    final additions =
+        diff.where((d) => d.operation == DiffOperation.insert).length;
+    final deletions =
+        diff.where((d) => d.operation == DiffOperation.delete).length;
     return (additions: additions, deletions: deletions);
   }
 
@@ -203,12 +201,10 @@ class LineDiff {
       if (fullDiff[i].operation != DiffOperation.delete) newStart++;
     }
 
-    final oldCount = lines
-        .where((l) => l.operation != DiffOperation.insert)
-        .length;
-    final newCount = lines
-        .where((l) => l.operation != DiffOperation.delete)
-        .length;
+    final oldCount =
+        lines.where((l) => l.operation != DiffOperation.insert).length;
+    final newCount =
+        lines.where((l) => l.operation != DiffOperation.delete).length;
 
     return DiffHunk(
       oldStart: oldStart,

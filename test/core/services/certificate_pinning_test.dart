@@ -78,8 +78,7 @@ void main() {
         expect(
           SecureHttpClient.verifyPin(otherDer, pin),
           isFalse,
-          reason:
-              'Pin is bound to the exact DER bytes we originally hashed; '
+          reason: 'Pin is bound to the exact DER bytes we originally hashed; '
               'changing the input must fail verification.',
         );
       },

@@ -45,8 +45,7 @@ class ScoutNode with JsonValidatorMixin {
       (validMap) => ScoutNode(
         name: validMap['name'],
         fullPath: validMap['fullPath'],
-        lastDiscovered:
-            DateTime.tryParse(validMap['lastDiscovered'] ?? '') ??
+        lastDiscovered: DateTime.tryParse(validMap['lastDiscovered'] ?? '') ??
             DateTime.now(),
         isFolder: validMap['isFolder'] ?? false,
         version: validMap['version'],

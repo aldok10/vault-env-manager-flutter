@@ -53,8 +53,7 @@ class ScoutNodeItem extends GetView<DiscoveryController> {
     return Obx(() {
       final isCollapsed = controller.collapsedPaths.contains(node.fullPath);
       final hasSubKeys = node.subKeys != null && node.subKeys!.isNotEmpty;
-      final bool isSelected =
-          !node.isFolder &&
+      final bool isSelected = !node.isFolder &&
           (!hasSubKeys || isCollapsed) &&
           controller.selectedPath == node.fullPath;
 
@@ -108,30 +107,30 @@ class ScoutNodeItem extends GetView<DiscoveryController> {
       color: isSelected
           ? SeraphineColors.of(context).primary.withValues(alpha: 0.15)
           : (node.isFolder
-                ? SeraphineColors.of(context).surface.withValues(alpha: 0.08)
-                : (hasSubKeys && !isCollapsed
-                      ? SeraphineColors.of(
-                          context,
-                        ).primary.withValues(alpha: 0.05)
-                      : Colors.transparent)),
+              ? SeraphineColors.of(context).surface.withValues(alpha: 0.08)
+              : (hasSubKeys && !isCollapsed
+                  ? SeraphineColors.of(
+                      context,
+                    ).primary.withValues(alpha: 0.05)
+                  : Colors.transparent)),
       borderRadius: SeraphineSpacing.radiusSM,
       border: isSelected
           ? Border.all(
               color: SeraphineColors.of(context).primary.withValues(alpha: 0.3),
             )
           : (node.isFolder
-                ? Border.all(
-                    color: SeraphineColors.of(
-                      context,
-                    ).border.withValues(alpha: 0.15),
-                  )
-                : (hasSubKeys && !isCollapsed
-                      ? Border.all(
-                          color: SeraphineColors.of(
-                            context,
-                          ).primary.withValues(alpha: 0.1),
-                        )
-                      : null)),
+              ? Border.all(
+                  color: SeraphineColors.of(
+                    context,
+                  ).border.withValues(alpha: 0.15),
+                )
+              : (hasSubKeys && !isCollapsed
+                  ? Border.all(
+                      color: SeraphineColors.of(
+                        context,
+                      ).primary.withValues(alpha: 0.1),
+                    )
+                  : null)),
     );
   }
 
@@ -146,9 +145,8 @@ class ScoutNodeItem extends GetView<DiscoveryController> {
                 child: Text(
                   node.name.toUpperCase(),
                   style: SeraphineTypography.bodySmall.copyWith(
-                    fontWeight: node.isFolder
-                        ? FontWeight.w900
-                        : FontWeight.w700,
+                    fontWeight:
+                        node.isFolder ? FontWeight.w900 : FontWeight.w700,
                     fontSize: 10,
                     color: SeraphineColors.of(context).textPrimary,
                     letterSpacing: 0.5,

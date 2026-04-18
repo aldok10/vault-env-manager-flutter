@@ -59,10 +59,8 @@ class SecureHttpClient extends http.BaseClient {
               '— no pin configured to override OS decision.',
             );
           } else {
-            final certHash = crypto.sha256
-                .convert(cert.der)
-                .toString()
-                .toLowerCase();
+            final certHash =
+                crypto.sha256.convert(cert.der).toString().toLowerCase();
             debugPrint('⚠️ SECURITY ALERT: Certificate Pinning Mismatch!');
             debugPrint('Host: $host:$port');
             debugPrint('Expected: $expectedHash');

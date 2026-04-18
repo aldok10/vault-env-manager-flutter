@@ -238,11 +238,11 @@ Uint8List pbkdf2HmacSha256({
 /// [pbkdf2HmacSha256]; the only reason it exists is so [compute] has a
 /// single-argument function to call.
 Uint8List _pbkdf2Isolate(_Pbkdf2Args args) => pbkdf2HmacSha256(
-  password: args.password,
-  salt: args.salt,
-  iterations: args.iterations,
-  dkLen: args.dkLen,
-);
+      password: args.password,
+      salt: args.salt,
+      iterations: args.iterations,
+      dkLen: args.dkLen,
+    );
 
 class _Pbkdf2Args {
   _Pbkdf2Args({

@@ -223,8 +223,7 @@ class SettingsVaultConfig extends GetView<SettingsController> {
                 scrollDirection: Axis.horizontal,
                 child: Row(
                   children: colors.map((c) {
-                    final isSelected =
-                        (controller.accentColor.value ??
+                    final isSelected = (controller.accentColor.value ??
                             SeraphineColors.of(context).primary.toARGB32()) ==
                         c;
                     return GestureDetector(
@@ -237,9 +236,8 @@ class SettingsVaultConfig extends GetView<SettingsController> {
                           color: Color(c),
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: isSelected
-                                ? Colors.white
-                                : Colors.transparent,
+                            color:
+                                isSelected ? Colors.white : Colors.transparent,
                             width: 2.5,
                           ),
                           boxShadow: isSelected
@@ -268,8 +266,7 @@ class SettingsVaultConfig extends GetView<SettingsController> {
             SeraphineSpacing.lgH,
             Row(
               children: icons.map((icon) {
-                final isSelected =
-                    (controller.iconData.value ??
+                final isSelected = (controller.iconData.value ??
                         CupertinoIcons.cloud_fill.codePoint) ==
                     icon.codePoint;
                 return IconButton(

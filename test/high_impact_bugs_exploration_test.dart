@@ -155,8 +155,7 @@ void main() {
         expect(
           controller.isLoading.value,
           isFalse,
-          reason:
-              'isLoading.value should be false after successful signIn(). '
+          reason: 'isLoading.value should be false after successful signIn(). '
               'On unfixed code, isLoading stays true after the success fold '
               'because it is only reset in the failure fold.',
         );
@@ -175,7 +174,8 @@ void main() {
     /// On UNFIXED code: callback returns true — test FAILS confirming bypass
     /// Counterexample: badCertificateCallback returns true for any certificate
     /// when fingerprint is null
-    test('createPinningClient(null) should reject certificates (fail-closed)', () {
+    test('createPinningClient(null) should reject certificates (fail-closed)',
+        () {
       // We test the certificate pinning behavior by creating an HttpClient
       // that captures the badCertificateCallback result.
       //
@@ -230,8 +230,7 @@ void main() {
       expect(
         hasBuggyGuard,
         isFalse,
-        reason:
-            'createPinningClient should return false (fail-closed) when '
+        reason: 'createPinningClient should return false (fail-closed) when '
             'fingerprint is null or empty. Found "return true" in the '
             'null/empty fingerprint guard, which silently accepts ALL '
             'certificates including MITM certificates.',

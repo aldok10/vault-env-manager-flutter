@@ -25,16 +25,16 @@ enum EnvVariant {
 
 class EnvClassifier {
   static EnvVariant classify(String? name) => switch (name?.toLowerCase()) {
-    null || '' => EnvVariant.unknown,
-    final String s when s.contains('prod') => EnvVariant.prod,
-    final String s
-        when s.contains('uat') || s.contains('stag') || s.contains('pre') =>
-      EnvVariant.staging,
-    final String s when s.contains('dev') => EnvVariant.dev,
-    final String s when s.contains('test') || s.contains('qa') =>
-      EnvVariant.test,
-    final String s when s.contains('local') || s.contains('lab') =>
-      EnvVariant.local,
-    _ => EnvVariant.unknown,
-  };
+        null || '' => EnvVariant.unknown,
+        final String s when s.contains('prod') => EnvVariant.prod,
+        final String s
+            when s.contains('uat') || s.contains('stag') || s.contains('pre') =>
+          EnvVariant.staging,
+        final String s when s.contains('dev') => EnvVariant.dev,
+        final String s when s.contains('test') || s.contains('qa') =>
+          EnvVariant.test,
+        final String s when s.contains('local') || s.contains('lab') =>
+          EnvVariant.local,
+        _ => EnvVariant.unknown,
+      };
 }
