@@ -257,9 +257,20 @@ jobs:
           install_root="${pkg_root}/opt/${APP_NAME}"
           mkdir -p "${install_root}" "${pkg_root}/usr/bin" "${pkg_root}/DEBIAN" \
             "${pkg_root}/usr/share/applications" \
-            "${pkg_root}/usr/share/icons/hicolor/256x256/apps"
+            "${pkg_root}/usr/share/icons/hicolor/128x128/apps" \
+            "${pkg_root}/usr/share/icons/hicolor/256x256/apps" \
+            "${pkg_root}/usr/share/icons/hicolor/512x512/apps"
           cp -r "${bundle_dir}/." "${install_root}/"
           ln -sf "/opt/${APP_NAME}/${APP_BINARY}" "${pkg_root}/usr/bin/${APP_NAME}"
+          # Reuse the macOS app icon PNGs as hicolor icons so the freedesktop
+          # lookup for `Icon=vault-env-manager` resolves in GNOME/KDE launchers.
+          icon_src="macos/Runner/Assets.xcassets/AppIcon.appiconset"
+          cp "${icon_src}/app_icon_128.png" \
+            "${pkg_root}/usr/share/icons/hicolor/128x128/apps/${APP_NAME}.png"
+          cp "${icon_src}/app_icon_256.png" \
+            "${pkg_root}/usr/share/icons/hicolor/256x256/apps/${APP_NAME}.png"
+          cp "${icon_src}/app_icon_512.png" \
+            "${pkg_root}/usr/share/icons/hicolor/512x512/apps/${APP_NAME}.png"
           # Basic .desktop entry so the installer shows up in app launchers.
           cat > "${pkg_root}/usr/share/applications/${APP_NAME}.desktop" <<DESKTOP
           [Desktop Entry]
