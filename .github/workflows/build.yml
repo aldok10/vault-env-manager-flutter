@@ -32,21 +32,27 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # `--no-tree-shake-icons` is required across all desktop targets
+          # because the codebase constructs IconData from non-constant values
+          # (e.g. `IconData(activeProfile.iconData!, ...)` in
+          # lib/src/features/settings and lib/src/features/workbench). The
+          # macOS target was the first to surface this as a hard build
+          # failure; Linux/Windows pass today but would regress as soon as
+          # the icon map grows. Keep the flag symmetric across targets.
           - target: linux
             os: ubuntu-latest
-            build_cmd: flutter build linux --release
+            build_cmd: flutter build linux --release --no-tree-shake-icons
             artifact_glob: build/linux/x64/release/bundle/**
           - target: windows
             os: windows-latest
-            build_cmd: flutter build windows --release
+            build_cmd: flutter build windows --release --no-tree-shake-icons
             artifact_glob: build/windows/x64/runner/Release/**
           - target: macos
             os: macos-latest
             # Code signing is disabled on the per-PR pipeline via a pbxproj
             # patch step; CI runners do not hold an Apple Developer
-            # provisioning profile. `--no-tree-shake-icons` keeps the build
-            # unblocked on the current codebase that uses non-const IconData
-            # invocations. Signed macOS builds stay with `flutter_release.yml`.
+            # provisioning profile. Signed macOS builds stay with
+            # `flutter_release.yml` on tag pushes.
             build_cmd: flutter build macos --release --no-tree-shake-icons
             artifact_glob: build/macos/Build/Products/Release/*.app/**
 
