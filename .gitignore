@@ -16,7 +16,6 @@ migrate_working_dir/
 *.iml
 *.ipr
 *.iws
-*.txt
 *.log
 .idea/
 
@@ -49,7 +48,6 @@ app.*.map.json
 /macos/build/*
 
 *.db
-*.txt
 # Added by code-review-graph
 .code-review-graph/
 

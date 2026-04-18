@@ -40,20 +40,20 @@ class ScoutCommandConsole extends GetView<DiscoveryController> {
     return Row(
       children: [
         Container(
-              width: 8,
-              height: 8,
-              decoration: BoxDecoration(
-                color: statusColor,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: statusColor.withValues(alpha: 0.5),
-                    blurRadius: 8,
-                    spreadRadius: 2,
-                  ),
-                ],
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(
+            color: statusColor,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: statusColor.withValues(alpha: 0.5),
+                blurRadius: 8,
+                spreadRadius: 2,
               ),
-            )
+            ],
+          ),
+        )
             .animate(onPlay: (controller) => controller.repeat())
             .fade(duration: 1000.ms, begin: 0.3, end: 1.0)
             .then()
@@ -76,9 +76,8 @@ class ScoutCommandConsole extends GetView<DiscoveryController> {
   Widget _buildScoutButton() {
     return Obx(
       () => SeraphineButton.solid(
-        onPressed: controller.isScouting.value
-            ? null
-            : () => controller.handleScout(),
+        onPressed:
+            controller.isScouting.value ? null : () => controller.handleScout(),
         text: controller.isScouting.value
             ? 'DISCOVERY IN PROGRESS...'
             : 'INITIATE SCOUT',

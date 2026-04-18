@@ -203,19 +203,16 @@ class _SeraphineDropdownState<T> extends State<SeraphineDropdown<T>>
                           () => Text(
                             widget.itemLabelBuilder?.call(widget.value.value) ??
                                 widget.value.value.toString(),
-                            style:
-                                (widget.isDense
-                                        ? SeraphineTypography.caption.copyWith(
-                                            fontSize: 12,
-                                          )
-                                        : SeraphineTypography.bodySmall)
-                                    .copyWith(
-                                      color: colors.textPrimary,
-                                      fontWeight: FontWeight.w600,
-                                      letterSpacing: widget.isUppercase
-                                          ? 1.0
-                                          : 0.0,
-                                    ),
+                            style: (widget.isDense
+                                    ? SeraphineTypography.caption.copyWith(
+                                        fontSize: 12,
+                                      )
+                                    : SeraphineTypography.bodySmall)
+                                .copyWith(
+                              color: colors.textPrimary,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: widget.isUppercase ? 1.0 : 0.0,
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -374,8 +371,7 @@ class _SeraphineDropdownOverlayState<T>
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: widget.items.map((item) {
-                          final label =
-                              widget.itemLabelBuilder?.call(item) ??
+                          final label = widget.itemLabelBuilder?.call(item) ??
                               item.toString();
                           final isSelected = widget.selectedValue == item;
 
@@ -457,19 +453,18 @@ class _SeraphineDropdownItemState extends State<_SeraphineDropdownItem> {
               Expanded(
                 child: Text(
                   widget.label,
-                  style:
-                      (widget.isSelected
-                              ? (SeraphineTypography.caption.copyWith(
-                                  fontSize: 12,
-                                )).copyWith(fontWeight: FontWeight.bold)
-                              : SeraphineTypography.caption.copyWith(
-                                  fontSize: 12,
-                                ))
-                          .copyWith(
-                            color: widget.isSelected
-                                ? SeraphineColors.of(context).primary
-                                : colors.textPrimary,
-                          ),
+                  style: (widget.isSelected
+                          ? (SeraphineTypography.caption.copyWith(
+                              fontSize: 12,
+                            )).copyWith(fontWeight: FontWeight.bold)
+                          : SeraphineTypography.caption.copyWith(
+                              fontSize: 12,
+                            ))
+                      .copyWith(
+                    color: widget.isSelected
+                        ? SeraphineColors.of(context).primary
+                        : colors.textPrimary,
+                  ),
                 ),
               ),
               if (widget.isSelected)

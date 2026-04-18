@@ -25,8 +25,7 @@ class ScoutSubKeyItem extends GetView<DiscoveryController> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final bool isSelected =
-          parentNode.fullPath == controller.selectedPath &&
+      final bool isSelected = parentNode.fullPath == controller.selectedPath &&
           keyName == controller.selectedKey;
 
       return Stack(

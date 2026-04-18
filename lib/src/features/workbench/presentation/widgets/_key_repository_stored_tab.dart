@@ -48,8 +48,7 @@ class KeyRepositoryStoredTab extends GetView<WorkbenchController> {
         itemBuilder: (context, index) {
           final config = controller.savedConfigs[index];
           final rawKey = config.key.value;
-          final isSelected =
-              controller.masterKeyController.text == rawKey &&
+          final isSelected = controller.masterKeyController.text == rawKey &&
               controller.selectedAlgorithm.value == config.algorithm.value;
 
           final maskedKey = config.key.masked;

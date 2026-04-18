@@ -63,9 +63,8 @@ void main() {
       final encrypted = crypt.encrypt(testPlaintext, algorithm: 'aes-256-cbc');
 
       // Tamper with payload
-      final decoded =
-          jsonDecode(utf8.decode(base64Decode(encrypted)))
-              as Map<String, dynamic>;
+      final decoded = jsonDecode(utf8.decode(base64Decode(encrypted)))
+          as Map<String, dynamic>;
       decoded['mac'] = 'wrong_mac';
       final tampered = base64Encode(utf8.encode(jsonEncode(decoded)));
 

@@ -139,7 +139,8 @@ class WorkbenchController extends GetxController
 
   Future<Either<Failure, Map<String, dynamic>>> fetchVaultData(
     String fullPath,
-  ) => vault.fetchRaw(fullPath);
+  ) =>
+      vault.fetchRaw(fullPath);
 
   void revertToVault() {
     if (vault.vaultDecryptedBaseline.value.isNotEmpty) {

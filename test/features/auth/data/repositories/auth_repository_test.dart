@@ -173,8 +173,7 @@ void main() {
     });
 
     test('v2 record with non-numeric iterations is rejected', () async {
-      final tampered =
-          'v2\$abc\$'
+      final tampered = 'v2\$abc\$'
           '${base64Encode(List<int>.filled(32, 1))}\$'
           '${base64Encode(List<int>.filled(32, 2))}';
       await mockConfig.setCipherPass(tampered);

@@ -35,14 +35,15 @@ class SeraphineButton extends StatefulWidget {
     IconData? icon,
     bool isLoading = false,
     double? width,
-  }) => SeraphineButton(
-    text: text,
-    onPressed: onPressed,
-    variant: SeraphineButtonVariant.glass,
-    icon: icon,
-    isLoading: isLoading,
-    width: width,
-  );
+  }) =>
+      SeraphineButton(
+        text: text,
+        onPressed: onPressed,
+        variant: SeraphineButtonVariant.glass,
+        icon: icon,
+        isLoading: isLoading,
+        width: width,
+      );
 
   factory SeraphineButton.solid({
     required String text,
@@ -50,14 +51,15 @@ class SeraphineButton extends StatefulWidget {
     IconData? icon,
     bool isLoading = false,
     double? width,
-  }) => SeraphineButton(
-    text: text,
-    onPressed: onPressed,
-    variant: SeraphineButtonVariant.solid,
-    icon: icon,
-    isLoading: isLoading,
-    width: width,
-  );
+  }) =>
+      SeraphineButton(
+        text: text,
+        onPressed: onPressed,
+        variant: SeraphineButtonVariant.solid,
+        icon: icon,
+        isLoading: isLoading,
+        width: width,
+      );
 
   factory SeraphineButton.outline({
     required String text,
@@ -65,14 +67,15 @@ class SeraphineButton extends StatefulWidget {
     IconData? icon,
     bool isLoading = false,
     double? width,
-  }) => SeraphineButton(
-    text: text,
-    onPressed: onPressed,
-    variant: SeraphineButtonVariant.outline,
-    icon: icon,
-    isLoading: isLoading,
-    width: width,
-  );
+  }) =>
+      SeraphineButton(
+        text: text,
+        onPressed: onPressed,
+        variant: SeraphineButtonVariant.outline,
+        icon: icon,
+        isLoading: isLoading,
+        width: width,
+      );
 
   factory SeraphineButton.ghost({
     required String text,
@@ -80,14 +83,15 @@ class SeraphineButton extends StatefulWidget {
     IconData? icon,
     bool isLoading = false,
     double? width,
-  }) => SeraphineButton(
-    text: text,
-    onPressed: onPressed,
-    variant: SeraphineButtonVariant.ghost,
-    icon: icon,
-    isLoading: isLoading,
-    width: width,
-  );
+  }) =>
+      SeraphineButton(
+        text: text,
+        onPressed: onPressed,
+        variant: SeraphineButtonVariant.ghost,
+        icon: icon,
+        isLoading: isLoading,
+        width: width,
+      );
 
   @override
   State<SeraphineButton> createState() => _SeraphineButtonState();
@@ -182,8 +186,8 @@ class _SeraphineButtonState extends State<SeraphineButton> {
             color: isDisabled
                 ? colors.surfaceHighlight
                 : (_isHovered.value
-                      ? colors.primary.withValues(alpha: 0.8)
-                      : colors.primary),
+                    ? colors.primary.withValues(alpha: 0.8)
+                    : colors.primary),
             shape: SeraphineShapes.squircle(),
             shadows: _isHovered.value && !isDisabled
                 ? [

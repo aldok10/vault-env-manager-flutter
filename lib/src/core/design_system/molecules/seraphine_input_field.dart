@@ -129,21 +129,19 @@ class _SeraphineInputFieldState extends State<SeraphineInputField> {
             onChanged: widget.onChanged,
             onSubmitted: widget.onSubmitted,
             cursorColor: colors.primary,
-            style:
-                (widget.isDense
-                        ? SeraphineTypography.caption.copyWith(fontSize: 12)
-                        : SeraphineTypography.bodySmall)
-                    .copyWith(color: colors.textPrimary),
+            style: (widget.isDense
+                    ? SeraphineTypography.caption.copyWith(fontSize: 12)
+                    : SeraphineTypography.bodySmall)
+                .copyWith(color: colors.textPrimary),
             decoration: InputDecoration(
               isDense: true,
               hintText: widget.hint,
-              hintStyle:
-                  (widget.isDense
-                          ? SeraphineTypography.caption.copyWith(fontSize: 12)
-                          : SeraphineTypography.bodySmall)
-                      .copyWith(
-                        color: colors.textSecondary.withValues(alpha: 0.5),
-                      ),
+              hintStyle: (widget.isDense
+                      ? SeraphineTypography.caption.copyWith(fontSize: 12)
+                      : SeraphineTypography.bodySmall)
+                  .copyWith(
+                color: colors.textSecondary.withValues(alpha: 0.5),
+              ),
               prefixIcon: widget.prefixIcon != null
                   ? Icon(
                       widget.prefixIcon,
@@ -159,9 +157,8 @@ class _SeraphineInputFieldState extends State<SeraphineInputField> {
                         child: Icon(
                           widget.suffixIcon,
                           size: widget.isDense ? 14 : 18,
-                          color: _isFocused
-                              ? colors.primary
-                              : colors.textDetail,
+                          color:
+                              _isFocused ? colors.primary : colors.textDetail,
                         ),
                       ),
                     )

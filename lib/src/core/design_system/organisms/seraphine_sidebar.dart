@@ -88,8 +88,8 @@ class _SeraphineSidebarItemState extends State<SeraphineSidebarItem> {
             color: widget.isSelected
                 ? colors.primary.withValues(alpha: 0.15)
                 : (_isHovered
-                      ? colors.textPrimary.withValues(alpha: 0.05)
-                      : Colors.transparent),
+                    ? colors.textPrimary.withValues(alpha: 0.05)
+                    : Colors.transparent),
             shape: SeraphineShapes.squircle(
               radius: colors.cardRadius,
               side: widget.isSelected
@@ -102,18 +102,16 @@ class _SeraphineSidebarItemState extends State<SeraphineSidebarItem> {
               Icon(
                 widget.icon,
                 size: 20,
-                color: widget.isSelected
-                    ? colors.primary
-                    : colors.textSecondary,
+                color:
+                    widget.isSelected ? colors.primary : colors.textSecondary,
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: SeraphineText(
                   widget.label,
                   style: SeraphineTypography.bodyMedium.copyWith(
-                    fontWeight: widget.isSelected
-                        ? FontWeight.w700
-                        : FontWeight.w500,
+                    fontWeight:
+                        widget.isSelected ? FontWeight.w700 : FontWeight.w500,
                     color: widget.isSelected
                         ? colors.textPrimary
                         : colors.textSecondary,

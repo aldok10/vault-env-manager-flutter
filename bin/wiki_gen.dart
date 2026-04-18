@@ -15,11 +15,8 @@ void main() {
   final buffer = StringBuffer();
 
   final pubspec = File('pubspec.yaml').readAsLinesSync();
-  final projectName = pubspec
-      .firstWhere((l) => l.startsWith('name:'))
-      .split(':')
-      .last
-      .trim();
+  final projectName =
+      pubspec.firstWhere((l) => l.startsWith('name:')).split(':').last.trim();
   final projectVersion = pubspec
       .firstWhere((l) => l.startsWith('version:'))
       .split(':')
@@ -57,9 +54,9 @@ void main() {
       final readme = File('${feature.path}/README.md');
       if (readme.existsSync()) {
         desc = readme.readAsLinesSync().firstWhere(
-          (l) => l.isNotEmpty && !l.startsWith('#'),
-          orElse: () => desc,
-        );
+              (l) => l.isNotEmpty && !l.startsWith('#'),
+              orElse: () => desc,
+            );
       }
 
       buffer.writeln('### 📦 ${name.toUpperCase()}');

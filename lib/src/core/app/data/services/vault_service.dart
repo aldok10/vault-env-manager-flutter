@@ -18,9 +18,9 @@ final class VaultService extends GetxService {
       final client = Get.find<http.Client>();
       final uri = Uri.parse(origin + scrapingUrl);
 
-      final response = await client
-          .get(uri, headers: {'X-Vault-Token': token})
-          .timeout(const Duration(seconds: 10));
+      final response = await client.get(uri, headers: {
+        'X-Vault-Token': token
+      }).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);

@@ -88,9 +88,8 @@ class ScoutNodeIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     final IconData icon;
     if (node.isFolder) {
-      icon = isCollapsed
-          ? CupertinoIcons.folder_fill
-          : CupertinoIcons.folder_open;
+      icon =
+          isCollapsed ? CupertinoIcons.folder_fill : CupertinoIcons.folder_open;
     } else if (hasSubKeys && !isCollapsed) {
       icon = CupertinoIcons.archivebox_fill;
     } else {
@@ -105,8 +104,8 @@ class ScoutNodeIcon extends StatelessWidget {
       color: isSelected
           ? SeraphineColors.of(context).primary
           : (node.isFolder
-                ? SeraphineColors.of(context).primary
-                : envColor.withValues(alpha: 0.8)),
+              ? SeraphineColors.of(context).primary
+              : envColor.withValues(alpha: 0.8)),
     );
   }
 }

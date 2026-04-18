@@ -10,7 +10,7 @@ class VaultScoutService {
   VaultScoutService(this._repository);
 
   Future<({Either<VaultFailure, List<ScoutNode>> result, int nodesFound})>
-  scout(
+      scout(
     String rootPath, {
     void Function(ScoutNode node)? onNodeDiscovered,
   }) async {
@@ -26,9 +26,8 @@ class VaultScoutService {
 
     try {
       final List<ScoutNode> results = [];
-      final String normalizedRoot = rootPath.endsWith('/')
-          ? rootPath
-          : '$rootPath/';
+      final String normalizedRoot =
+          rootPath.endsWith('/') ? rootPath : '$rootPath/';
 
       await _recursiveCrawl(
         normalizedRoot,

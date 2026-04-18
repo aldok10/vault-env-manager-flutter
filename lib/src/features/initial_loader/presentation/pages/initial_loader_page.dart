@@ -25,25 +25,22 @@ class InitialLoaderPage extends GetView<InitialLoaderController> {
           Positioned(
             top: -200,
             left: -200,
-            child:
-                Container(
-                      width: 600,
-                      height: 600,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: RadialGradient(
-                          colors: [
-                            colors.primary.withValues(alpha: 0.2),
-                            Colors.transparent,
-                          ],
-                        ),
-                      ),
-                    )
-                    .animate(onPlay: (c) => c.repeat(reverse: true))
-                    .fadeOut(
-                      duration: const Duration(seconds: 4),
-                      curve: Curves.easeInOut,
-                    ),
+            child: Container(
+              width: 600,
+              height: 600,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    colors.primary.withValues(alpha: 0.2),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ).animate(onPlay: (c) => c.repeat(reverse: true)).fadeOut(
+                  duration: const Duration(seconds: 4),
+                  curve: Curves.easeInOut,
+                ),
           ),
 
           Center(
@@ -52,39 +49,39 @@ class InitialLoaderPage extends GetView<InitialLoaderController> {
               children: [
                 // 🛡️ Seraphine "Secure Core" Shield
                 Container(
-                      width: 140,
-                      height: 140,
-                      padding: const EdgeInsets.all(32),
-                      decoration: ShapeDecoration(
-                        shape: SeraphineShapes.squircle(
-                          radius: 36,
-                          side: BorderSide(
-                            color: colors.glassBorder,
-                            width: 1.5,
-                          ),
-                        ),
-                        color: colors.surface.withValues(alpha: 0.5),
-                        shadows: [
-                          BoxShadow(
-                            color: colors.primary.withValues(alpha: 0.3),
-                            blurRadius: 60,
-                            spreadRadius: 4,
-                          ),
-                        ],
+                  width: 140,
+                  height: 140,
+                  padding: const EdgeInsets.all(32),
+                  decoration: ShapeDecoration(
+                    shape: SeraphineShapes.squircle(
+                      radius: 36,
+                      side: BorderSide(
+                        color: colors.glassBorder,
+                        width: 1.5,
                       ),
-                      child: ShaderMask(
-                        shaderCallback: (bounds) => LinearGradient(
-                          colors: [colors.primary, colors.accent],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ).createShader(bounds),
-                        child: const Icon(
-                          CupertinoIcons.shield_fill,
-                          size: 76,
-                          color: Colors.white,
-                        ),
+                    ),
+                    color: colors.surface.withValues(alpha: 0.5),
+                    shadows: [
+                      BoxShadow(
+                        color: colors.primary.withValues(alpha: 0.3),
+                        blurRadius: 60,
+                        spreadRadius: 4,
                       ),
-                    )
+                    ],
+                  ),
+                  child: ShaderMask(
+                    shaderCallback: (bounds) => LinearGradient(
+                      colors: [colors.primary, colors.accent],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ).createShader(bounds),
+                    child: const Icon(
+                      CupertinoIcons.shield_fill,
+                      size: 76,
+                      color: Colors.white,
+                    ),
+                  ),
+                )
                     .animate(onPlay: (c) => c.repeat(reverse: true))
                     .moveY(
                       begin: -8,
@@ -102,17 +99,14 @@ class InitialLoaderPage extends GetView<InitialLoaderController> {
 
                 // 🏛️ Branding
                 Text(
-                      'VAULT WORKBENCH',
-                      style: SeraphineTypography.label.copyWith(
-                        color: colors.primary,
-                        fontSize: 16,
-                        letterSpacing: 10,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    )
-                    .animate()
-                    .fadeIn(duration: SeraphineMotion.slow)
-                    .shimmer(
+                  'VAULT WORKBENCH',
+                  style: SeraphineTypography.label.copyWith(
+                    color: colors.primary,
+                    fontSize: 16,
+                    letterSpacing: 10,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ).animate().fadeIn(duration: SeraphineMotion.slow).shimmer(
                       delay: const Duration(seconds: 1),
                       duration: const Duration(seconds: 3),
                     ),
@@ -146,15 +140,13 @@ class InitialLoaderPage extends GetView<InitialLoaderController> {
                         child: Stack(
                           children: [
                             Container(
-                                  width: 80,
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors: [colors.primary, colors.accent],
-                                    ),
-                                  ),
-                                )
-                                .animate(onPlay: (c) => c.repeat())
-                                .moveX(
+                              width: 80,
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [colors.primary, colors.accent],
+                                ),
+                              ),
+                            ).animate(onPlay: (c) => c.repeat()).moveX(
                                   begin: -80,
                                   end: 280,
                                   duration: const Duration(milliseconds: 2000),
