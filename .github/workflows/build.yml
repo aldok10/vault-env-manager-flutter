@@ -40,11 +40,14 @@ jobs:
             os: windows-latest
             build_cmd: flutter build windows --release
             artifact_glob: build/windows/x64/runner/Release/**
-          # macOS is temporarily excluded from the per-PR pipeline because it
-          # requires an Apple Developer provisioning profile for the Runner
-          # target. `flutter_release.yml` handles signed macOS builds on tag
-          # pushes. Re-add here once a Keychain-capable signing workflow is
-          # wired up.
+          - target: macos
+            os: macos-latest
+            # Code signing is disabled on the per-PR pipeline via xcodebuild
+            # env vars (see `Build ${{ matrix.target }}` step); CI runners do
+            # not hold an Apple Developer provisioning profile. Signed macOS
+            # builds stay with `flutter_release.yml` on tag pushes.
+            build_cmd: flutter build macos --release
+            artifact_glob: build/macos/Build/Products/Release/*.app/**
 
     steps:
       - name: Checkout repository
@@ -116,6 +119,14 @@ jobs:
           # Public build metadata injected as Dart compile-time constants.
           APP_BUILD_NUMBER: ${{ github.run_number }}
           APP_GIT_SHA: ${{ github.sha }}
+          # Disable Xcode code signing for unsigned macOS CI builds. Xcode
+          # picks these up automatically when running under `flutter build
+          # macos` (which delegates to xcodebuild under the hood). No effect
+          # on Linux/Windows runs.
+          CODE_SIGN_IDENTITY: ""
+          CODE_SIGNING_REQUIRED: "NO"
+          CODE_SIGNING_ALLOWED: "NO"
+          DEVELOPMENT_TEAM: ""
         shell: bash
         run: |
           ${{ matrix.build_cmd }} \
