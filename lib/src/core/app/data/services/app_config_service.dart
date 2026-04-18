@@ -233,8 +233,7 @@ class AppConfigService extends GetxService
       final uri = Uri.tryParse(s);
       if (uri != null && uri.hasAuthority) {
         final host = uri.host.toLowerCase();
-        final isLocal =
-            host == 'localhost' ||
+        final isLocal = host == 'localhost' ||
             host == '127.0.0.1' ||
             host == '::1' ||
             host.endsWith('.local');

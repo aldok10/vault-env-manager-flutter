@@ -19,11 +19,11 @@ class SecretConfig extends Equatable {
 
   /// Factory for creating a completely empty or default configuration.
   factory SecretConfig.empty(String id) => SecretConfig(
-    id: id,
-    label: const Label(''),
-    key: const SecretKey(''),
-    algorithm: const EncryptionAlgorithm(EncryptionAlgorithm.aes256gcm),
-  );
+        id: id,
+        label: const Label(''),
+        key: const SecretKey(''),
+        algorithm: const EncryptionAlgorithm(EncryptionAlgorithm.aes256gcm),
+      );
 
   /// Business logic: Validates if the configuration is complete and usable.
   bool get isValid =>

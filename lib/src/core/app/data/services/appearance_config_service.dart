@@ -32,11 +32,11 @@ class AppearanceConfigService extends GetxService with HydratedMixin {
 
   @override
   Map<String, dynamic> toJson() => {
-    'themeMode': themeMode.value,
-    'osStyle': osStyle.value,
-    'uiScale': uiScale.value,
-    'colorTheme': colorTheme.value,
-  };
+        'themeMode': themeMode.value,
+        'osStyle': osStyle.value,
+        'uiScale': uiScale.value,
+        'colorTheme': colorTheme.value,
+      };
 
   @override
   void fromJson(Map<String, dynamic> json) {

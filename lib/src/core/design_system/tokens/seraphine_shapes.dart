@@ -10,13 +10,14 @@ class SeraphineShapes {
   static SmoothRectangleBorder squircle({
     BorderSide side = BorderSide.none,
     double radius = baseRadius,
-  }) => SmoothRectangleBorder(
-    borderRadius: SmoothBorderRadius(
-      cornerRadius: radius,
-      cornerSmoothing: smooth,
-    ),
-    side: side,
-  );
+  }) =>
+      SmoothRectangleBorder(
+        borderRadius: SmoothBorderRadius(
+          cornerRadius: radius,
+          cornerSmoothing: smooth,
+        ),
+        side: side,
+      );
 
   static SmoothBorderRadius get borderRadius =>
       SmoothBorderRadius(cornerRadius: baseRadius, cornerSmoothing: smooth);

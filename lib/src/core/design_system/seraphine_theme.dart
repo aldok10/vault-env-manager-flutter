@@ -13,9 +13,8 @@ class SeraphineTheme {
     required bool isDark,
   }) {
     final palette = SeraphinePalette.fromId(colorTheme);
-    final baseExtension = isDark
-        ? SeraphineColorExtension.dark
-        : SeraphineColorExtension.light;
+    final baseExtension =
+        isDark ? SeraphineColorExtension.dark : SeraphineColorExtension.light;
 
     // Apply OS Style Overrides
     double glassBlur = 20.0;
@@ -48,17 +47,15 @@ class SeraphineTheme {
         break;
     }
 
-    final SeraphineColorExtension extension =
-        baseExtension.copyWith(
-              primary: palette.primary,
-              secondary: palette.secondary,
-              accent: palette.accent,
-              glassBlur: glassBlur,
-              glassOpacity: glassOpacity,
-              cardRadius: cardRadius,
-              designStyle: designStyle,
-            )
-            as SeraphineColorExtension;
+    final SeraphineColorExtension extension = baseExtension.copyWith(
+      primary: palette.primary,
+      secondary: palette.secondary,
+      accent: palette.accent,
+      glassBlur: glassBlur,
+      glassOpacity: glassOpacity,
+      cardRadius: cardRadius,
+      designStyle: designStyle,
+    ) as SeraphineColorExtension;
 
     final base = ThemeData(
       brightness: isDark ? Brightness.dark : Brightness.light,

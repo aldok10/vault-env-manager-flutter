@@ -39,8 +39,7 @@ class SeraphineGlassBox extends StatelessWidget {
     final isFlat = style.designStyle == 'flat';
     final isNeumorphic = style.designStyle == 'neumorphic';
 
-    final effectiveColor =
-        color ??
+    final effectiveColor = color ??
         style.surface.withValues(alpha: isFlat ? 1.0 : style.glassOpacity);
     final effectiveBorder = borderColor ?? style.border;
 
@@ -48,8 +47,7 @@ class SeraphineGlassBox extends StatelessWidget {
       width: width,
       height: height,
       decoration: BoxDecoration(
-        boxShadow:
-            shadow ??
+        boxShadow: shadow ??
             (isNeumorphic
                 ? [
                     BoxShadow(

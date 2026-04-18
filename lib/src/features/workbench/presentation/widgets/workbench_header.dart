@@ -131,18 +131,17 @@ class WorkbenchHeader extends GetView<WorkbenchController> {
       () => controller.statusMessage.value.isNotEmpty
           ? Padding(
               padding: const EdgeInsets.only(right: 12.0),
-              child:
-                  Text(
-                    controller.statusMessage.value.toUpperCase(),
-                    style: SeraphineTypography.caption.copyWith(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 8,
-                      letterSpacing: 0.5,
-                      color: controller.statusMessage.value.contains('FAILURE')
-                          ? SeraphineColors.of(context).error
-                          : SeraphineColors.of(context).textDetail,
-                    ),
-                  ).animate().fadeIn().shimmer(
+              child: Text(
+                controller.statusMessage.value.toUpperCase(),
+                style: SeraphineTypography.caption.copyWith(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 8,
+                  letterSpacing: 0.5,
+                  color: controller.statusMessage.value.contains('FAILURE')
+                      ? SeraphineColors.of(context).error
+                      : SeraphineColors.of(context).textDetail,
+                ),
+              ).animate().fadeIn().shimmer(
                     duration: const Duration(milliseconds: 2000),
                   ),
             )

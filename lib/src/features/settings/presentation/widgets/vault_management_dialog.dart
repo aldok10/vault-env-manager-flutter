@@ -136,9 +136,8 @@ class _VaultManagementDialogState extends State<VaultManagementDialog> {
             profile: profile,
             isActive: isActive,
             onEdit: () => _showEditDialog(profile),
-            onDelete: profiles.length > 1
-                ? () => _confirmDelete(profile)
-                : null,
+            onDelete:
+                profiles.length > 1 ? () => _confirmDelete(profile) : null,
             onSwitch: isActive ? null : () => _config.switchVault(profile.id),
           );
         },
@@ -453,8 +452,7 @@ class _EditProfileDialogState extends State<_EditProfileDialog> {
           text: 'SAVE',
           variant: SeraphineButtonVariant.solid,
           onPressed: () {
-            final p =
-                widget.profile?.copyWith(
+            final p = widget.profile?.copyWith(
                   name: _nameController.text,
                   vaultOrigin: _originController.text,
                   accentColor: _selectedColor,
