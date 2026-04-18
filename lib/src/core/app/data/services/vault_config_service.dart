@@ -64,7 +64,7 @@ class VaultConfigService extends GetxService {
     } else {
       activeProfileId.value =
           await _storage.get(_kActiveProfileId, isSecure: false) ??
-          vaultProfiles.first.id;
+              vaultProfiles.first.id;
     }
 
     cipherPass.value = await _storage.get(_kCipherPass, isSecure: true) ?? '';

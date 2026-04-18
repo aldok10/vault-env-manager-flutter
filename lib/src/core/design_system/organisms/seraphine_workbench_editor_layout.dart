@@ -80,9 +80,8 @@ class _SeraphineWorkbenchEditorLayoutState
                 SeraphineSpacing.md,
                 100,
               ),
-              child: _activeMobileTab == 0
-                  ? _plaintextPane()
-                  : _ciphertextPane(),
+              child:
+                  _activeMobileTab == 0 ? _plaintextPane() : _ciphertextPane(),
             ),
           ),
         ),
@@ -134,30 +133,30 @@ class _SeraphineWorkbenchEditorLayoutState
   }
 
   Widget _plaintextPane({double? height}) => SeraphineEditorPane(
-    label: 'PLAINTEXT',
-    dotColor: SeraphineColors.accentPrimary,
-    stats: widget.plaintextStats,
-    controller: widget.plaintextController,
-    hint: 'Input code or secret payload...',
-    onClear: widget.onClearPlaintext,
-    onPaste: widget.onPasteToPlaintext,
-    onSwap: widget.onSwap,
-    appendLog: widget.appendLog,
-    height: height,
-  );
+        label: 'PLAINTEXT',
+        dotColor: SeraphineColors.accentPrimary,
+        stats: widget.plaintextStats,
+        controller: widget.plaintextController,
+        hint: 'Input code or secret payload...',
+        onClear: widget.onClearPlaintext,
+        onPaste: widget.onPasteToPlaintext,
+        onSwap: widget.onSwap,
+        appendLog: widget.appendLog,
+        height: height,
+      );
 
   Widget _ciphertextPane({double? height}) => SeraphineEditorPane(
-    label: 'CIPHERTEXT',
-    dotColor: SeraphineColors.accentSecondary,
-    stats: widget.ciphertextStats,
-    controller: widget.ciphertextController,
-    hint: 'Encrypted result will appear here...',
-    onClear: widget.onClearCiphertext,
-    onPaste: widget.onPasteToCiphertext,
-    onSwap: widget.onSwap,
-    appendLog: widget.appendLog,
-    height: height,
-  );
+        label: 'CIPHERTEXT',
+        dotColor: SeraphineColors.accentSecondary,
+        stats: widget.ciphertextStats,
+        controller: widget.ciphertextController,
+        hint: 'Encrypted result will appear here...',
+        onClear: widget.onClearCiphertext,
+        onPaste: widget.onPasteToCiphertext,
+        onSwap: widget.onSwap,
+        appendLog: widget.appendLog,
+        height: height,
+      );
 
   Widget _buildMobileTabs() {
     return Padding(
@@ -186,20 +185,21 @@ class _SeraphineWorkbenchEditorLayoutState
   }
 
   Widget _tabLabel(String label, IconData icon) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 8),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(icon, size: 14, color: SeraphineColors.of(context).textPrimary),
-        SeraphineSpacing.smH,
-        Text(
-          label,
-          style: SeraphineTypography.label.copyWith(
-            fontSize: 10,
-            color: SeraphineColors.of(context).textPrimary,
-          ),
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon,
+                size: 14, color: SeraphineColors.of(context).textPrimary),
+            SeraphineSpacing.smH,
+            Text(
+              label,
+              style: SeraphineTypography.label.copyWith(
+                fontSize: 10,
+                color: SeraphineColors.of(context).textPrimary,
+              ),
+            ),
+          ],
         ),
-      ],
-    ),
-  );
+      );
 }

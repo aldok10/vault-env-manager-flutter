@@ -20,45 +20,42 @@ class AuthCard extends GetView<AuthController> {
     final isMobile = context.isMobile;
 
     return Padding(
-          padding: SeraphineSpacing.pHMD,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 420),
-            child: SeraphineGlassCard(
-              cornerRadius: SeraphineShapes.baseRadius * 2,
-              padding: isMobile
-                  ? SeraphineSpacing.pAllXL
-                  : SeraphineSpacing.pAllXL,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const AuthIcon(),
-                  SeraphineSpacing.xlV,
-                  const AuthHeader(),
-                  SeraphineSpacing.xxlV,
-                  Obx(
-                    () => SeraphineInputField(
-                      label: controller.isNew
-                          ? 'Initialization Key'
-                          : 'Authorization',
-                      controller: controller.passwordController,
-                      focusNode: controller.focusNode,
-                      autofocus: true,
-                      obscureText: true,
-                      hint: '••••••••',
-                      prefixIcon: CupertinoIcons.lock_shield,
-                      onChanged: (_) => controller.isError.value = false,
-                    ),
-                  ),
-                  _buildErrorArea(context),
-                  SeraphineSpacing.xlV,
-                  _buildSubmitButton(),
-                  SeraphineSpacing.xlV,
-                  const AuthFooter(),
-                ],
+      padding: SeraphineSpacing.pHMD,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 420),
+        child: SeraphineGlassCard(
+          cornerRadius: SeraphineShapes.baseRadius * 2,
+          padding: isMobile ? SeraphineSpacing.pAllXL : SeraphineSpacing.pAllXL,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const AuthIcon(),
+              SeraphineSpacing.xlV,
+              const AuthHeader(),
+              SeraphineSpacing.xxlV,
+              Obx(
+                () => SeraphineInputField(
+                  label:
+                      controller.isNew ? 'Initialization Key' : 'Authorization',
+                  controller: controller.passwordController,
+                  focusNode: controller.focusNode,
+                  autofocus: true,
+                  obscureText: true,
+                  hint: '••••••••',
+                  prefixIcon: CupertinoIcons.lock_shield,
+                  onChanged: (_) => controller.isError.value = false,
+                ),
               ),
-            ),
+              _buildErrorArea(context),
+              SeraphineSpacing.xlV,
+              _buildSubmitButton(),
+              SeraphineSpacing.xlV,
+              const AuthFooter(),
+            ],
           ),
-        )
+        ),
+      ),
+    )
         .animate()
         .scale(
           begin: const Offset(0.96, 0.96),

@@ -32,24 +32,22 @@ class SeraphineNowBar extends StatelessWidget {
         children: [
           // Adaptive Glow Indicator
           Container(
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: SeraphineColors.of(context).primary,
-                  boxShadow: [
-                    BoxShadow(
-                      color: SeraphineColors.of(
-                        context,
-                      ).primary.withValues(alpha: 0.5),
-                      blurRadius: 8,
-                      spreadRadius: 2,
-                    ),
-                  ],
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: SeraphineColors.of(context).primary,
+              boxShadow: [
+                BoxShadow(
+                  color: SeraphineColors.of(
+                    context,
+                  ).primary.withValues(alpha: 0.5),
+                  blurRadius: 8,
+                  spreadRadius: 2,
                 ),
-              )
-              .animate(onPlay: (c) => c.repeat())
-              .shimmer(
+              ],
+            ),
+          ).animate(onPlay: (c) => c.repeat()).shimmer(
                 duration: const Duration(seconds: 2),
                 color: Colors.white.withValues(alpha: 0.5),
               ),

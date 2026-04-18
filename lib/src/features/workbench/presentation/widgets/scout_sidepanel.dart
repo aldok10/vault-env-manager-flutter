@@ -14,9 +14,8 @@ class ScoutSidepanel extends GetView<DiscoveryController> {
 
   @override
   Widget build(BuildContext context) {
-    final double drawerWidth = context.width < 600
-        ? context.width * 0.9
-        : context.width * 0.5;
+    final double drawerWidth =
+        context.width < 600 ? context.width * 0.9 : context.width * 0.5;
 
     return Drawer(
       width: drawerWidth,

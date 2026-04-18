@@ -45,9 +45,9 @@ class AuthIcon extends StatelessWidget {
                 ),
       ),
     ).animate().shimmer(
-      delay: const Duration(seconds: 1),
-      duration: const Duration(seconds: 2),
-    );
+          delay: const Duration(seconds: 1),
+          duration: const Duration(seconds: 2),
+        );
   }
 }
 

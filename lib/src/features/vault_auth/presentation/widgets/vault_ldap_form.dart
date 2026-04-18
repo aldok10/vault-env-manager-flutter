@@ -42,7 +42,6 @@ class VaultLdapForm extends StatelessWidget {
             onSuffixTap: () => controller.togglePasswordVisibility(),
           ),
         ),
-
         SeraphineSpacing.mdV,
         GestureDetector(
           onTap: () => controller.toggleAdvancedSettings(),

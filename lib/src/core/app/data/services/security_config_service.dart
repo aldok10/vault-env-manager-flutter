@@ -22,9 +22,8 @@ class SecurityConfigService extends GetxService {
 
   Future<void> setCipherPass(String hash) async {
     cipherPass.value = hash;
-    final String prefix = _activeProfileId != null
-        ? '${_activeProfileId}_'
-        : '';
+    final String prefix =
+        _activeProfileId != null ? '${_activeProfileId}_' : '';
     await _storage.saveSecure('$prefix$_kCipherPass', hash);
   }
 }

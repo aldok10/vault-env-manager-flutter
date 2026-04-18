@@ -95,9 +95,8 @@ class _SeraphineGlassCardState extends State<SeraphineGlassCard>
       onEnter: (event) => _onHover(true, event.localPosition),
       onExit: (_) => _onHover(false),
       onHover: (event) => _mousePositionNotifier.value = event.localPosition,
-      cursor: widget.onTap != null
-          ? SystemMouseCursors.click
-          : MouseCursor.defer,
+      cursor:
+          widget.onTap != null ? SystemMouseCursors.click : MouseCursor.defer,
       child: GestureDetector(
         onTap: widget.onTap,
         child: AnimatedBuilder(

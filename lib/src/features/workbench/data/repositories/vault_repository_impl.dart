@@ -40,7 +40,7 @@ class VaultRepositoryImpl implements IVaultRepository {
   }
 
   Future<Either<VaultFailure, ({Map<String, dynamic> data, int? version})>>
-  getMetadataAndData(String path) async {
+      getMetadataAndData(String path) async {
     try {
       final url = _buildVaultUrl(_config.scrapingUrl.value, 'data', path);
       final response = await _client.get(url, headers: _headers);
@@ -134,11 +134,11 @@ class VaultRepositoryImpl implements IVaultRepository {
   }
 
   Map<String, String> get _headers => {
-    'X-Vault-Token': _config.vaultToken.value,
-    'Accept': 'application/json',
-    if (_config.vaultNamespace.value.isNotEmpty)
-      'X-Vault-Namespace': _config.vaultNamespace.value,
-  };
+        'X-Vault-Token': _config.vaultToken.value,
+        'Accept': 'application/json',
+        if (_config.vaultNamespace.value.isNotEmpty)
+          'X-Vault-Namespace': _config.vaultNamespace.value,
+      };
 
   Either<VaultFailure, T> _handleFailure<T>(int statusCode, {String? msg}) {
     if (statusCode == 403 || statusCode == 401) {

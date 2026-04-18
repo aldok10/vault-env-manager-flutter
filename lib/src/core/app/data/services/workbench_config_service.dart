@@ -42,21 +42,18 @@ class WorkbenchConfigService extends GetxService {
     // Global UI Settings
     hideVaultContext.value =
         (await _storage.get(_kHideVaultContext, isSecure: false) ?? 'false') ==
-        'true';
-    editorHeight.value =
-        double.tryParse(
+            'true';
+    editorHeight.value = double.tryParse(
           await _storage.get(_kEditorHeight, isSecure: false) ?? '500.0',
         ) ??
         500.0;
-    editorWidthPercent.value =
-        double.tryParse(
+    editorWidthPercent.value = double.tryParse(
           await _storage.get(_kEditorWidthPercent, isSecure: false) ?? '50.0',
         ) ??
         50.0;
 
     // Profile-Specific UI Settings (Isolation)
-    isDashboardCollapsed.value =
-        (await _storage.get(
+    isDashboardCollapsed.value = (await _storage.get(
               _getProfileKey(_kDashboardCollapsed),
               isSecure: false,
             ) ??
@@ -64,21 +61,20 @@ class WorkbenchConfigService extends GetxService {
         'true';
     isFlipped.value =
         (await _storage.get(_getProfileKey(_kIsFlipped), isSecure: false) ??
-            'false') ==
-        'true';
+                'false') ==
+            'true';
 
     editorFont.value =
         await _storage.get(_getProfileKey(_kEditorFont), isSecure: false) ??
-        'JetBrains Mono';
-    tabSize.value =
-        int.tryParse(
+            'JetBrains Mono';
+    tabSize.value = int.tryParse(
           await _storage.get(_getProfileKey(_kTabSize), isSecure: false) ?? '2',
         ) ??
         2;
     autoSave.value =
         (await _storage.get(_getProfileKey(_kAutoSave), isSecure: false) ??
-            'true') ==
-        'true';
+                'true') ==
+            'true';
 
     // Profile-Specific Secret Configs
     final configsJson = await _storage.get(
@@ -109,9 +105,8 @@ class WorkbenchConfigService extends GetxService {
     if (finalJson != null && finalJson.isNotEmpty) {
       try {
         final List<dynamic> list = json.decode(finalJson);
-        secretConfigs.value = list
-            .map((e) => SecretConfigModel.fromMap(e).toDomain())
-            .toList();
+        secretConfigs.value =
+            list.map((e) => SecretConfigModel.fromMap(e).toDomain()).toList();
       } catch (e) {
         debugPrint('WorkbenchConfigService: Error parsing secret configs: $e');
         secretConfigs.clear();

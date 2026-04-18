@@ -89,9 +89,8 @@ class _PaletteSelector extends GetView<SettingsController> {
                     : Colors.transparent,
                 shape: StadiumBorder(
                   side: BorderSide(
-                    color: isSelected
-                        ? (p['color'] as Color)
-                        : Colors.transparent,
+                    color:
+                        isSelected ? (p['color'] as Color) : Colors.transparent,
                     width: 1.5,
                   ),
                 ),

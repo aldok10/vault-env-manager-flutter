@@ -24,51 +24,50 @@ class SeraphineActionDock extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AnimatedContainer(
-          duration: SeraphineMotion.fast,
-          curve: SeraphineMotion.standardCurve,
-          child: SeraphineGlassBox(
-            padding: const EdgeInsets.all(SeraphineSpacing.xs),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Obx(
-                  () => Tooltip(
-                    message: 'Encrypt current workspace data',
-                    child: Semantics(
-                      label: 'Encrypt',
-                      hint: 'Cryptographic locking of secret payloads',
-                      child: SeraphineButton(
-                        text: 'ENCRYPT',
-                        icon: CupertinoIcons.lock_shield_fill,
-                        onPressed: onEncrypt,
-                        isLoading: isProcessing.value,
-                        variant: SeraphineButtonVariant.solid,
-                      ),
-                    ),
+      duration: SeraphineMotion.fast,
+      curve: SeraphineMotion.standardCurve,
+      child: SeraphineGlassBox(
+        padding: const EdgeInsets.all(SeraphineSpacing.xs),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Obx(
+              () => Tooltip(
+                message: 'Encrypt current workspace data',
+                child: Semantics(
+                  label: 'Encrypt',
+                  hint: 'Cryptographic locking of secret payloads',
+                  child: SeraphineButton(
+                    text: 'ENCRYPT',
+                    icon: CupertinoIcons.lock_shield_fill,
+                    onPressed: onEncrypt,
+                    isLoading: isProcessing.value,
+                    variant: SeraphineButtonVariant.solid,
                   ),
                 ),
-                SeraphineSpacing.xsH,
-                Obx(
-                  () => Tooltip(
-                    message: 'Decrypt current workspace data',
-                    child: Semantics(
-                      label: 'Decrypt',
-                      hint:
-                          'Unlock encrypted payloads using the derivation key',
-                      child: SeraphineButton(
-                        text: 'DECRYPT',
-                        icon: CupertinoIcons.lock_open_fill,
-                        onPressed: onDecrypt,
-                        isLoading: isProcessing.value,
-                        variant: SeraphineButtonVariant.outline,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
-        )
+            SeraphineSpacing.xsH,
+            Obx(
+              () => Tooltip(
+                message: 'Decrypt current workspace data',
+                child: Semantics(
+                  label: 'Decrypt',
+                  hint: 'Unlock encrypted payloads using the derivation key',
+                  child: SeraphineButton(
+                    text: 'DECRYPT',
+                    icon: CupertinoIcons.lock_open_fill,
+                    onPressed: onDecrypt,
+                    isLoading: isProcessing.value,
+                    variant: SeraphineButtonVariant.outline,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    )
         .animate()
         .slideY(
           begin: 1.0,
