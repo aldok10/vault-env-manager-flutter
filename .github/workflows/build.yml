@@ -1,11 +1,13 @@
 name: Desktop Build
 
-# Triggers on every push and pull_request targeting main, plus manual dispatch.
-# This pipeline focuses on desktop targets (Linux / Windows / macOS). The
-# packaging steps always run so PR reviewers also receive ready-to-run
-# installers as artifacts; the final `release` job only publishes a GitHub
-# Release when a merge lands on `main`. Tagged full-matrix releases (mobile
-# + web + signed macOS) are still handled separately by `flutter_release.yml`.
+# Full desktop pipeline: build Linux / Windows / macOS for both x86_64 and
+# arm64, package them as native installers (`.deb`, Inno Setup `.exe`,
+# `.pkg`) plus portable archives (`.tar.gz`, `.zip`, `.dmg`), upload per-run
+# artifacts for PR reviewers, and auto-publish a GitHub Release with every
+# installer attached whenever a merge lands on `main`.
+#
+# Tagged signed / store-ready releases (mobile + web + notarized macOS) are
+# still handled separately by `flutter_release.yml` on `v*` tags.
 on:
   push:
     branches: [main]
@@ -22,41 +24,62 @@ permissions:
 
 env:
   FLUTTER_CHANNEL: stable
-  # Pin the Flutter version so the pipeline is reproducible. Must ship a Dart SDK
-  # that satisfies pubspec's `^3.11.4` constraint (Flutter >= 3.41.x).
+  # Pin the Flutter version so the pipeline is reproducible. Must ship a
+  # Dart SDK that satisfies pubspec's `^3.11.4` constraint (Flutter 3.41+).
   FLUTTER_VERSION: 3.41.7
   APP_NAME: vault-env-manager
   APP_BINARY: vault_env_manager
+  APP_DISPLAY_NAME: Vault Env Manager
+  APP_BUNDLE_ID: com.aldok10.vaultenvmanager
 
 jobs:
   build-desktop:
     name: Build ${{ matrix.target }}
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
+    timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
         include:
-          # `--no-tree-shake-icons` is required across all desktop targets
-          # because the codebase constructs IconData from non-constant values
-          # (e.g. `IconData(activeProfile.iconData!, ...)` in
-          # lib/src/features/settings and lib/src/features/workbench). The
-          # macOS target was the first to surface this as a hard build
-          # failure; Linux/Windows pass today but would regress as soon as
-          # the icon map grows. Keep the flag symmetric across targets.
-          - target: linux
+          # -------- Linux --------
+          - target: linux-x64
             os: ubuntu-latest
-            build_cmd: flutter build linux --release --no-tree-shake-icons
-          - target: windows
+            family: linux
+            arch: x64
+            deb_arch: amd64
+            flutter_arch_dir: x64
+          - target: linux-arm64
+            os: ubuntu-24.04-arm
+            family: linux
+            arch: arm64
+            deb_arch: arm64
+            flutter_arch_dir: arm64
+          # -------- Windows --------
+          - target: windows-x64
             os: windows-latest
-            build_cmd: flutter build windows --release --no-tree-shake-icons
-          - target: macos
-            os: macos-latest
-            # Code signing is disabled on the per-PR pipeline via a pbxproj
-            # patch step; CI runners do not hold an Apple Developer
-            # provisioning profile. Signed macOS builds stay with
-            # `flutter_release.yml` on tag pushes.
-            build_cmd: flutter build macos --release --no-tree-shake-icons
+            family: windows
+            arch: x64
+            flutter_arch_dir: x64
+          - target: windows-arm64
+            os: windows-11-arm
+            family: windows
+            arch: arm64
+            flutter_arch_dir: arm64
+          # -------- macOS --------
+          # macos-14 is the Apple Silicon (arm64) hosted runner;
+          # macos-13 is the last Intel (x86_64) hosted runner that Flutter
+          # can target natively without rosetta. Flutter's tracked Xcode
+          # project still pins a Developer Team id that does not exist on
+          # public runners — a pbxproj patch below strips that and forces
+          # deep ad-hoc signing.
+          - target: macos-arm64
+            os: macos-14
+            family: macos
+            arch: arm64
+          - target: macos-x64
+            os: macos-13
+            family: macos
+            arch: x64
 
     steps:
       - name: Checkout repository
@@ -75,19 +98,19 @@ jobs:
           path: |
             ~/.pub-cache
             .dart_tool
-          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
+          key: ${{ runner.os }}-${{ matrix.arch }}-pub-${{ hashFiles('**/pubspec.lock') }}
           restore-keys: |
-            ${{ runner.os }}-pub-
+            ${{ runner.os }}-${{ matrix.arch }}-pub-
 
-      - name: Enable desktop support
+      - name: Enable Flutter desktop support
+        shell: bash
         run: |
           flutter config --enable-linux-desktop
           flutter config --enable-windows-desktop
           flutter config --enable-macos-desktop
-        shell: bash
 
       - name: Install Linux desktop system dependencies
-        if: matrix.target == 'linux'
+        if: matrix.family == 'linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -96,15 +119,31 @@ jobs:
             libsecret-1-dev libjsoncpp-dev \
             dpkg fakeroot
 
+      - name: Install Inno Setup (Windows)
+        if: matrix.family == 'windows'
+        shell: pwsh
+        # windows-latest ships Inno Setup 6 preinstalled; windows-11-arm may
+        # not. Install-or-skip via chocolatey covers both runners and is a
+        # no-op when iscc is already on PATH.
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $iscc = Get-Command iscc -ErrorAction SilentlyContinue
+          if ($null -eq $iscc) {
+            choco install innosetup --no-progress -y
+          }
+          $inno = 'C:\Program Files (x86)\Inno Setup 6'
+          if (Test-Path $inno) {
+            "$inno" | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
+          }
+          Get-Command iscc | Format-List Name, Source
+
       - name: Disable Xcode code signing for CI (macOS only)
-        if: matrix.target == 'macos'
+        if: matrix.family == 'macos'
         shell: bash
-        # The tracked Xcode project pins a DEVELOPMENT_TEAM and manual signing
-        # on the Runner Release config, which makes `flutter build macos` try
-        # to pull a provisioning profile that does not exist on public GitHub
-        # runners. Patch the project.pbxproj only on the CI runner to strip
-        # the team and force unsigned ad-hoc builds. Release signing for
-        # production still lives in `flutter_release.yml` on tag pushes.
+        # CI runners do not hold an Apple Developer provisioning profile.
+        # Strip the team + force automatic signing so Xcode emits an
+        # ad-hoc signed `.app`. A deep codesign + quarantine strip happens
+        # again after the build to cover every nested framework.
         run: |
           set -euo pipefail
           PBXPROJ=macos/Runner.xcodeproj/project.pbxproj
@@ -115,12 +154,8 @@ jobs:
             -e 's|"CODE_SIGN_IDENTITY\[sdk=macosx\*\]" = "Apple Development";|"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";|g' \
             "$PBXPROJ"
           rm -f "$PBXPROJ.bak"
-          echo "--- signing-related lines after patch ---"
-          grep -nE "CODE_SIGN|DEVELOPMENT_TEAM|PROVISIONING_PROFILE" "$PBXPROJ" || true
 
       - name: Materialize runtime env file
-        # Write the runtime .env asset from the APP_ENV_FILE secret when provided; otherwise
-        # fall back to the tracked example so analyzer/build still succeed for forks and PRs.
         env:
           APP_ENV_FILE: ${{ secrets.APP_ENV_FILE }}
         shell: bash
@@ -142,7 +177,6 @@ jobs:
       # before merging any feature work to `main`.
       # - name: Static analysis
       #   run: flutter analyze
-      #
       # - name: Unit tests
       #   run: flutter test --no-pub
 
@@ -150,116 +184,185 @@ jobs:
         id: version
         shell: bash
         run: |
-          # `version: 1.0.1+2` -> semver = 1.0.1, buildcode = 2.
           raw="$(grep '^version: ' pubspec.yaml | awk '{print $2}')"
           semver="${raw%%+*}"
+          short_sha="$(echo "${GITHUB_SHA}" | cut -c1-7)"
           echo "semver=${semver}" >> "$GITHUB_OUTPUT"
           echo "raw=${raw}" >> "$GITHUB_OUTPUT"
-          short_sha="$(echo "${GITHUB_SHA}" | cut -c1-7)"
           echo "short_sha=${short_sha}" >> "$GITHUB_OUTPUT"
-          echo "release_tag=build-${{ github.run_number }}-${short_sha}" >> "$GITHUB_OUTPUT"
+          echo "version_tag=${semver}-ci.${{ github.run_number }}" >> "$GITHUB_OUTPUT"
 
-      - name: Build ${{ matrix.target }}
+      - name: Build ${{ matrix.target }} (Flutter)
         env:
-          # Public build metadata injected as Dart compile-time constants.
           APP_BUILD_NUMBER: ${{ github.run_number }}
           APP_GIT_SHA: ${{ github.sha }}
         shell: bash
         run: |
-          ${{ matrix.build_cmd }} \
+          set -euo pipefail
+          flutter build ${{ matrix.family }} --release --no-tree-shake-icons \
             --dart-define=APP_BUILD_NUMBER="${APP_BUILD_NUMBER}" \
             --dart-define=APP_GIT_SHA="${APP_GIT_SHA}" \
             --dart-define=APP_ENVIRONMENT=ci
 
-      # -----------------------------------------------------------------
-      # Packaging. Each target produces downloadable installers. The same
-      # files are attached to both the per-run artifact upload (visible on
-      # every push/PR) and the GitHub Release (only on merge to `main`).
-      # -----------------------------------------------------------------
+      # ---------------- Packaging ----------------
 
       - name: Package Linux (.deb + .tar.gz)
-        if: matrix.target == 'linux'
+        if: matrix.family == 'linux'
         shell: bash
         env:
           APP_VERSION: ${{ steps.version.outputs.semver }}
+          VERSION_TAG: ${{ steps.version.outputs.version_tag }}
+          DEB_ARCH: ${{ matrix.deb_arch }}
+          FLUTTER_ARCH_DIR: ${{ matrix.flutter_arch_dir }}
         run: |
           set -euo pipefail
           mkdir -p dist
-          bundle_dir="build/linux/x64/release/bundle"
+          bundle_dir="build/linux/${FLUTTER_ARCH_DIR}/release/bundle"
+          if [ ! -d "${bundle_dir}" ]; then
+            echo "Expected Flutter Linux bundle at ${bundle_dir}" >&2
+            find build/linux -maxdepth 4 -type d -print || true
+            exit 1
+          fi
           pkg_root="pkg-linux"
           rm -rf "${pkg_root}"
           install_root="${pkg_root}/opt/${APP_NAME}"
-          mkdir -p "${install_root}" "${pkg_root}/usr/bin" "${pkg_root}/DEBIAN"
+          mkdir -p "${install_root}" "${pkg_root}/usr/bin" "${pkg_root}/DEBIAN" \
+            "${pkg_root}/usr/share/applications" \
+            "${pkg_root}/usr/share/icons/hicolor/256x256/apps"
           cp -r "${bundle_dir}/." "${install_root}/"
           ln -sf "/opt/${APP_NAME}/${APP_BINARY}" "${pkg_root}/usr/bin/${APP_NAME}"
-          # Minimal Debian control metadata. Depends on GTK + libsecret + libjsoncpp
-          # which are the runtime deps this Flutter app relies on (see apt-get
-          # install step above for the build-time counterparts).
+          # Basic .desktop entry so the installer shows up in app launchers.
+          cat > "${pkg_root}/usr/share/applications/${APP_NAME}.desktop" <<DESKTOP
+          [Desktop Entry]
+          Name=${APP_DISPLAY_NAME}
+          Comment=Secure desktop vault for managing application environments and secrets.
+          Exec=/opt/${APP_NAME}/${APP_BINARY}
+          Icon=${APP_NAME}
+          Terminal=false
+          Type=Application
+          Categories=Utility;Development;
+          DESKTOP
           cat > "${pkg_root}/DEBIAN/control" <<EOF
           Package: ${APP_NAME}
-          Version: ${APP_VERSION}-ci.${{ github.run_number }}
+          Version: ${VERSION_TAG}
           Section: utils
           Priority: optional
-          Architecture: amd64
+          Architecture: ${DEB_ARCH}
           Depends: libgtk-3-0, libsecret-1-0, libjsoncpp25 | libjsoncpp26 | libjsoncpp1
           Maintainer: aldok10 <aldok10@users.noreply.github.com>
-          Description: Vault Env Manager
+          Description: ${APP_DISPLAY_NAME}
            Secure desktop vault for managing application environments and secrets.
           EOF
           chmod 0755 "${pkg_root}/DEBIAN"
           fakeroot dpkg-deb --build "${pkg_root}" \
-            "dist/${APP_NAME}-${APP_VERSION}-ci.${{ github.run_number }}-linux-amd64.deb"
+            "dist/${APP_NAME}-${VERSION_TAG}-linux-${DEB_ARCH}.deb"
           tar -C "${bundle_dir}" -czf \
-            "dist/${APP_NAME}-${APP_VERSION}-ci.${{ github.run_number }}-linux-amd64.tar.gz" .
+            "dist/${APP_NAME}-${VERSION_TAG}-linux-${DEB_ARCH}.tar.gz" .
           ls -la dist/
 
-      - name: Package macOS (.dmg + .zip)
-        if: matrix.target == 'macos'
+      - name: Package Windows (Inno Setup installer + .zip)
+        if: matrix.family == 'windows'
+        shell: pwsh
+        env:
+          APP_VERSION: ${{ steps.version.outputs.semver }}
+          VERSION_TAG: ${{ steps.version.outputs.version_tag }}
+          ARCH: ${{ matrix.arch }}
+          FLUTTER_ARCH_DIR: ${{ matrix.flutter_arch_dir }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          $releaseDir = "build/windows/$env:FLUTTER_ARCH_DIR/runner/Release"
+          if (-not (Test-Path $releaseDir)) {
+            Write-Error "Expected Flutter Windows Release dir at $releaseDir"
+          }
+          $outputBase = "$env:APP_NAME-$env:VERSION_TAG-windows-$env:ARCH-setup"
+          # Inno Setup expects an absolute path for BuildDir so CI relative
+          # paths work regardless of runner working directory.
+          $absReleaseDir = (Resolve-Path $releaseDir).Path
+          & iscc `
+            "/DAppVersion=$env:APP_VERSION" `
+            "/DBuildNumber=${{ github.run_number }}" `
+            "/DArch=$env:ARCH" `
+            "/DBuildDir=$absReleaseDir" `
+            "/DOutputBase=$outputBase" `
+            installer/windows/setup.iss
+          if ($LASTEXITCODE -ne 0) { throw "iscc failed ($LASTEXITCODE)" }
+          # Portable .zip alongside the installer for reviewers who cannot
+          # (or should not) run an .exe installer.
+          $zipPath = "dist/$env:APP_NAME-$env:VERSION_TAG-windows-$env:ARCH.zip"
+          Compress-Archive -Path (Join-Path $releaseDir '*') -DestinationPath $zipPath -Force
+          Get-ChildItem dist | Format-Table Name, Length
+
+      - name: Package macOS (.pkg + .dmg + .zip, deep ad-hoc signed)
+        if: matrix.family == 'macos'
         shell: bash
         env:
           APP_VERSION: ${{ steps.version.outputs.semver }}
+          VERSION_TAG: ${{ steps.version.outputs.version_tag }}
+          ARCH: ${{ matrix.arch }}
         run: |
           set -euo pipefail
-          mkdir -p dist
+          mkdir -p dist staging
           release_dir="build/macos/Build/Products/Release"
           app_bundle="$(find "${release_dir}" -maxdepth 1 -type d -name '*.app' | head -n 1)"
           if [ -z "${app_bundle}" ]; then
             echo "No .app bundle found under ${release_dir}" >&2
+            find build/macos -maxdepth 4 -type d -print || true
             exit 1
           fi
           app_name="$(basename "${app_bundle}")"
-          version_suffix="${APP_VERSION}-ci.${{ github.run_number }}"
-          # .dmg via hdiutil (UDZO = compressed, read-only).
-          hdiutil create \
-            -volname "${APP_NAME}" \
-            -srcfolder "${app_bundle}" \
-            -ov -format UDZO \
-            "dist/${APP_NAME}-${version_suffix}-macos.dmg"
-          # Fallback .zip for users who cannot mount a .dmg in CI.
-          ditto -c -k --sequesterRsrc --keepParent \
-            "${app_bundle}" \
-            "dist/${APP_NAME}-${version_suffix}-macos.zip"
-          ls -la dist/
-          echo "Packaged ${app_name}"
 
-      - name: Package Windows (.zip)
-        if: matrix.target == 'windows'
-        shell: pwsh
-        env:
-          APP_VERSION: ${{ steps.version.outputs.semver }}
-        run: |
-          $ErrorActionPreference = 'Stop'
-          New-Item -ItemType Directory -Force -Path dist | Out-Null
-          $releaseDir = 'build/windows/x64/runner/Release'
-          $versionSuffix = "$env:APP_VERSION-ci.${{ github.run_number }}"
-          $zipPath = "dist/$env:APP_NAME-$versionSuffix-windows-x64.zip"
-          Compress-Archive -Path (Join-Path $releaseDir '*') -DestinationPath $zipPath -Force
-          Get-ChildItem dist | Format-Table Name, Length
+          # ---- Deep ad-hoc signing + quarantine strip ----
+          # Gatekeeper on macOS 14+ requires every nested framework to have
+          # a valid signature; Flutter does this already but redoing it
+          # defensively guards against any helper binaries `flutter build`
+          # might have left ad-hoc unsigned.
+          /usr/bin/xattr -cr "${app_bundle}"
+          /usr/bin/codesign --force --deep --sign - \
+            --options runtime --timestamp=none \
+            "${app_bundle}" || true
+          # Non-fatal verification; signed ad-hoc, so spctl will still fail
+          # (that is expected without a Developer ID certificate).
+          /usr/bin/codesign --verify --deep --strict --verbose=2 "${app_bundle}" || true
+
+          # ---- .pkg installer (double-click install wizard) ----
+          pkg_payload="staging/pkg-root"
+          rm -rf "${pkg_payload}"
+          mkdir -p "${pkg_payload}/Applications"
+          /usr/bin/ditto "${app_bundle}" "${pkg_payload}/Applications/${app_name}"
+          /usr/bin/pkgbuild \
+            --root "${pkg_payload}" \
+            --identifier "${APP_BUNDLE_ID}" \
+            --version "${APP_VERSION}" \
+            --install-location "/" \
+            "dist/${APP_NAME}-${VERSION_TAG}-macos-${ARCH}.pkg"
+
+          # ---- .dmg with helper for first-launch Gatekeeper bypass ----
+          dmg_stage="staging/dmg-root"
+          rm -rf "${dmg_stage}"
+          mkdir -p "${dmg_stage}"
+          /usr/bin/ditto "${app_bundle}" "${dmg_stage}/${app_name}"
+          cp tooling/macos/fix-gatekeeper.command "${dmg_stage}/FIX-GATEKEEPER.command"
+          chmod +x "${dmg_stage}/FIX-GATEKEEPER.command"
+          # Symlink to /Applications so the classic "drag to Applications"
+          # UX works inside the mounted volume.
+          ln -s /Applications "${dmg_stage}/Applications"
+          /usr/bin/hdiutil create \
+            -volname "${APP_DISPLAY_NAME}" \
+            -srcfolder "${dmg_stage}" \
+            -ov -format UDZO \
+            "dist/${APP_NAME}-${VERSION_TAG}-macos-${ARCH}.dmg"
+
+          # ---- Portable .zip fallback ----
+          /usr/bin/ditto -c -k --sequesterRsrc --keepParent \
+            "${app_bundle}" \
+            "dist/${APP_NAME}-${VERSION_TAG}-macos-${ARCH}.zip"
+          ls -la dist/
 
       - name: Upload ${{ matrix.target }} installers
         uses: actions/upload-artifact@v4
         with:
-          name: vault-env-manager-${{ matrix.target }}-${{ github.run_number }}
+          name: ${{ env.APP_NAME }}-${{ matrix.target }}-${{ github.run_number }}
           path: dist/**
           if-no-files-found: error
           retention-days: 14
@@ -269,17 +372,15 @@ jobs:
   # Release job. Only fires on direct pushes to `main` (i.e. after a PR
   # merges). Downloads every per-target installer and publishes them as
   # assets of a rolling GitHub Release tagged `build-<run>-<sha>`. This
-  # tag does NOT match the `v*` glob `flutter_release.yml` listens on,
-  # so the two workflows never double-publish. Signed macOS + mobile +
-  # web bundles still ship from `flutter_release.yml` on explicit `vX.Y.Z`
-  # tags.
+  # tag deliberately does NOT match the `v*` glob `flutter_release.yml`
+  # listens on, so the two workflows never double-publish.
   # -------------------------------------------------------------------
   release:
     name: Publish GitHub Release
     needs: build-desktop
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     permissions:
       contents: write
     steps:
@@ -303,14 +404,14 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: downloaded
-          pattern: vault-env-manager-*-${{ github.run_number }}
+          pattern: ${{ env.APP_NAME }}-*-${{ github.run_number }}
           merge-multiple: true
 
       - name: List collected installers
         shell: bash
         run: |
-          echo "--- contents of downloaded/ ---"
-          find downloaded -type f -maxdepth 2 -print
+          echo "--- downloaded/ contents ---"
+          find downloaded -maxdepth 3 -type f -print | sort
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
@@ -321,23 +422,28 @@ jobs:
           generate_release_notes: true
           fail_on_unmatched_files: true
           body: |
-            Automated desktop build produced after merge to `main`.
+            Automated multi-arch desktop build produced after a merge to `main`.
 
             - Commit: `${{ github.sha }}`
             - Pubspec version: `${{ steps.meta.outputs.semver }}`
             - Build number: `${{ github.run_number }}`
 
-            ### Downloads
+            ### Installers
 
-            | Platform | File | Notes |
-            | --- | --- | --- |
-            | Linux | `${{ env.APP_NAME }}-*-linux-amd64.deb` / `.tar.gz` | Depends on `libgtk-3-0`, `libsecret-1-0`, `libjsoncpp*`. |
-            | macOS | `${{ env.APP_NAME }}-*-macos.dmg` / `.zip` | Ad-hoc signed. Run `xattr -cr *.app` if Gatekeeper blocks first launch. |
-            | Windows | `${{ env.APP_NAME }}-*-windows-x64.zip` | Unpack and run `${{ env.APP_BINARY }}.exe`. |
+            | Platform | Installer | Portable | Notes |
+            | --- | --- | --- | --- |
+            | Linux x86_64 | `${{ env.APP_NAME }}-*-linux-amd64.deb` | `${{ env.APP_NAME }}-*-linux-amd64.tar.gz` | `sudo dpkg -i …deb` (deps: libgtk-3-0, libsecret-1-0, libjsoncpp*). |
+            | Linux arm64 | `${{ env.APP_NAME }}-*-linux-arm64.deb` | `${{ env.APP_NAME }}-*-linux-arm64.tar.gz` | Same, on aarch64 hosts. |
+            | Windows x64 | `${{ env.APP_NAME }}-*-windows-x64-setup.exe` | `${{ env.APP_NAME }}-*-windows-x64.zip` | Inno Setup installer with Start Menu + Add/Remove integration. |
+            | Windows arm64 | `${{ env.APP_NAME }}-*-windows-arm64-setup.exe` | `${{ env.APP_NAME }}-*-windows-arm64.zip` | Native ARM64, no emulation. |
+            | macOS Apple Silicon | `${{ env.APP_NAME }}-*-macos-arm64.pkg` | `.dmg`, `.zip` | Ad-hoc signed. First launch: right-click → Open, or run `FIX-GATEKEEPER.command` inside the `.dmg`. |
+            | macOS Intel | `${{ env.APP_NAME }}-*-macos-x64.pkg` | `.dmg`, `.zip` | Same ad-hoc caveat. |
 
-            Signed / store-ready builds are still produced by `flutter_release.yml` on explicit `v*` tags.
+            **macOS Gatekeeper note.** Builds here are ad-hoc signed (no Apple Developer ID). macOS 14+ will show a "cannot verify developer" / "damaged" prompt on first launch. Either right-click the app → Open → Open, or double-click `FIX-GATEKEEPER.command` inside the mounted `.dmg` to strip the quarantine attribute. Signed + notarized builds still flow through `flutter_release.yml` on explicit `v*` tags.
           files: |
             downloaded/**/*.deb
             downloaded/**/*.tar.gz
             downloaded/**/*.dmg
+            downloaded/**/*.pkg
             downloaded/**/*.zip
+            downloaded/**/*setup.exe
