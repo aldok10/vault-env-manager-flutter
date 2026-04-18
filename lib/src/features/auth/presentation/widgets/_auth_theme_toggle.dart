@@ -31,7 +31,7 @@ class AuthThemeToggle extends StatelessWidget {
             ),
             onPressed: () {
               final newMode =
-                  config.themeMode.value == 'Dark' ? 'Light' : 'Dark';
+                  config.themeMode.value == 'dark' ? 'light' : 'dark';
               config.setThemeMode(newMode);
               Get.changeThemeMode(
                 newMode == 'Dark' ? ThemeMode.dark : ThemeMode.light,
