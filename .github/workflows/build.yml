@@ -40,10 +40,11 @@ jobs:
             os: windows-latest
             build_cmd: flutter build windows --release
             artifact_glob: build/windows/x64/runner/Release/**
-          - target: macos
-            os: macos-latest
-            build_cmd: flutter build macos --release
-            artifact_glob: build/macos/Build/Products/Release/*.app/**
+          # macOS is temporarily excluded from the per-PR pipeline because it
+          # requires an Apple Developer provisioning profile for the Runner
+          # target. `flutter_release.yml` handles signed macOS builds on tag
+          # pushes. Re-add here once a Keychain-capable signing workflow is
+          # wired up.
 
     steps:
       - name: Checkout repository
