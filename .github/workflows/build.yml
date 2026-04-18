@@ -18,8 +18,9 @@ permissions:
 
 env:
   FLUTTER_CHANNEL: stable
-  # Pin the Flutter version so the pipeline is reproducible. Matches pubspec Dart SDK >= 3.11.4.
-  FLUTTER_VERSION: 3.35.5
+  # Pin the Flutter version so the pipeline is reproducible. Must ship a Dart SDK
+  # that satisfies pubspec's `^3.11.4` constraint (Flutter >= 3.41.x).
+  FLUTTER_VERSION: 3.41.7
   JAVA_VERSION: 17
 
 jobs:
