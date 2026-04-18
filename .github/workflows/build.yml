@@ -42,11 +42,12 @@ jobs:
             artifact_glob: build/windows/x64/runner/Release/**
           - target: macos
             os: macos-latest
-            # Code signing is disabled on the per-PR pipeline via xcodebuild
-            # env vars (see `Build ${{ matrix.target }}` step); CI runners do
-            # not hold an Apple Developer provisioning profile. Signed macOS
-            # builds stay with `flutter_release.yml` on tag pushes.
-            build_cmd: flutter build macos --release
+            # Code signing is disabled on the per-PR pipeline via a pbxproj
+            # patch step; CI runners do not hold an Apple Developer
+            # provisioning profile. `--no-tree-shake-icons` keeps the build
+            # unblocked on the current codebase that uses non-const IconData
+            # invocations. Signed macOS builds stay with `flutter_release.yml`.
+            build_cmd: flutter build macos --release --no-tree-shake-icons
             artifact_glob: build/macos/Build/Products/Release/*.app/**
 
     steps:
