@@ -54,6 +54,10 @@ jobs:
             arch: arm64
             deb_arch: arm64
             flutter_arch_dir: arm64
+            # Flutter publishes no Linux arm64 prebuilt (release JSON only
+            # lists dart_sdk_arch=x64); install by cloning the git tag so
+            # the tooling bootstraps the correct Dart SDK at first run.
+            flutter_install: git
           # -------- Windows --------
           - target: windows-x64
             os: windows-latest
@@ -65,6 +69,10 @@ jobs:
             family: windows
             arch: arm64
             flutter_arch_dir: arm64
+            # Same story as Linux arm64: Windows Flutter SDK prebuilts are
+            # x64-only. Clone from git and rely on Flutter's own update_
+            # dart_sdk.ps1 to fetch the arm64 Dart SDK on first invocation.
+            flutter_install: git
           # -------- macOS --------
           # macos-14 is the Apple Silicon (arm64) hosted runner;
           # macos-13 is the last Intel (x86_64) hosted runner that Flutter
@@ -85,12 +93,33 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Flutter ${{ env.FLUTTER_VERSION }}
+      - name: Set up Flutter ${{ env.FLUTTER_VERSION }} (prebuilt)
+        if: matrix.flutter_install != 'git'
         uses: subosito/flutter-action@v2
         with:
           channel: ${{ env.FLUTTER_CHANNEL }}
           flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
+
+      - name: Set up Flutter ${{ env.FLUTTER_VERSION }} (git clone, arm64)
+        if: matrix.flutter_install == 'git'
+        shell: bash
+        # Google does not publish Flutter Linux arm64 or Windows arm64 SDK
+        # prebuilts. Cloning the release tag lets Flutter's own bootstrap
+        # scripts fetch the matching Dart SDK for the host architecture on
+        # first invocation.
+        run: |
+          set -euo pipefail
+          install_root="${RUNNER_TOOL_CACHE:-$HOME}/flutter-${FLUTTER_VERSION}"
+          if [ ! -x "${install_root}/bin/flutter" ]; then
+            git clone --depth 1 --branch "${FLUTTER_VERSION}" \
+              https://github.com/flutter/flutter.git "${install_root}"
+          fi
+          echo "${install_root}/bin" >> "$GITHUB_PATH"
+          # Force the Dart SDK + tool cache to materialise now so later
+          # steps don't race on the first `flutter` invocation.
+          "${install_root}/bin/flutter" --disable-analytics
+          "${install_root}/bin/flutter" --version
 
       - name: Cache Pub dependencies
         uses: actions/cache@v4
