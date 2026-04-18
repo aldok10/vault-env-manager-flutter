@@ -55,10 +55,3 @@ app.*.map.json
 
 .env
 .kiro/specs/**
-
-# Android signing secrets — must never be committed
-android/key.properties
-android/app/upload-keystore.jks
-android/app/*.jks
-android/app/*.keystore
-
