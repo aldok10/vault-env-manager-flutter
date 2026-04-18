@@ -1,8 +1,11 @@
 name: Desktop Build
 
 # Triggers on every push and pull_request targeting main, plus manual dispatch.
-# This pipeline focuses on desktop targets (Linux / Windows / macOS). Tagged
-# full-matrix releases are handled separately by `flutter_release.yml`.
+# This pipeline focuses on desktop targets (Linux / Windows / macOS). The
+# packaging steps always run so PR reviewers also receive ready-to-run
+# installers as artifacts; the final `release` job only publishes a GitHub
+# Release when a merge lands on `main`. Tagged full-matrix releases (mobile
+# + web + signed macOS) are still handled separately by `flutter_release.yml`.
 on:
   push:
     branches: [main]
@@ -22,12 +25,14 @@ env:
   # Pin the Flutter version so the pipeline is reproducible. Must ship a Dart SDK
   # that satisfies pubspec's `^3.11.4` constraint (Flutter >= 3.41.x).
   FLUTTER_VERSION: 3.41.7
+  APP_NAME: vault-env-manager
+  APP_BINARY: vault_env_manager
 
 jobs:
   build-desktop:
     name: Build ${{ matrix.target }}
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 25
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -42,11 +47,9 @@ jobs:
           - target: linux
             os: ubuntu-latest
             build_cmd: flutter build linux --release --no-tree-shake-icons
-            artifact_glob: build/linux/x64/release/bundle/**
           - target: windows
             os: windows-latest
             build_cmd: flutter build windows --release --no-tree-shake-icons
-            artifact_glob: build/windows/x64/runner/Release/**
           - target: macos
             os: macos-latest
             # Code signing is disabled on the per-PR pipeline via a pbxproj
@@ -54,7 +57,6 @@ jobs:
             # provisioning profile. Signed macOS builds stay with
             # `flutter_release.yml` on tag pushes.
             build_cmd: flutter build macos --release --no-tree-shake-icons
-            artifact_glob: build/macos/Build/Products/Release/*.app/**
 
     steps:
       - name: Checkout repository
@@ -91,7 +93,8 @@ jobs:
           sudo apt-get install -y \
             clang cmake ninja-build pkg-config \
             libgtk-3-dev liblzma-dev libstdc++-12-dev \
-            libsecret-1-dev libjsoncpp-dev
+            libsecret-1-dev libjsoncpp-dev \
+            dpkg fakeroot
 
       - name: Disable Xcode code signing for CI (macOS only)
         if: matrix.target == 'macos'
@@ -143,6 +146,19 @@ jobs:
       # - name: Unit tests
       #   run: flutter test --no-pub
 
+      - name: Resolve app version (pubspec)
+        id: version
+        shell: bash
+        run: |
+          # `version: 1.0.1+2` -> semver = 1.0.1, buildcode = 2.
+          raw="$(grep '^version: ' pubspec.yaml | awk '{print $2}')"
+          semver="${raw%%+*}"
+          echo "semver=${semver}" >> "$GITHUB_OUTPUT"
+          echo "raw=${raw}" >> "$GITHUB_OUTPUT"
+          short_sha="$(echo "${GITHUB_SHA}" | cut -c1-7)"
+          echo "short_sha=${short_sha}" >> "$GITHUB_OUTPUT"
+          echo "release_tag=build-${{ github.run_number }}-${short_sha}" >> "$GITHUB_OUTPUT"
+
       - name: Build ${{ matrix.target }}
         env:
           # Public build metadata injected as Dart compile-time constants.
@@ -155,11 +171,173 @@ jobs:
             --dart-define=APP_GIT_SHA="${APP_GIT_SHA}" \
             --dart-define=APP_ENVIRONMENT=ci
 
-      - name: Upload ${{ matrix.target }} artifact
+      # -----------------------------------------------------------------
+      # Packaging. Each target produces downloadable installers. The same
+      # files are attached to both the per-run artifact upload (visible on
+      # every push/PR) and the GitHub Release (only on merge to `main`).
+      # -----------------------------------------------------------------
+
+      - name: Package Linux (.deb + .tar.gz)
+        if: matrix.target == 'linux'
+        shell: bash
+        env:
+          APP_VERSION: ${{ steps.version.outputs.semver }}
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          bundle_dir="build/linux/x64/release/bundle"
+          pkg_root="pkg-linux"
+          rm -rf "${pkg_root}"
+          install_root="${pkg_root}/opt/${APP_NAME}"
+          mkdir -p "${install_root}" "${pkg_root}/usr/bin" "${pkg_root}/DEBIAN"
+          cp -r "${bundle_dir}/." "${install_root}/"
+          ln -sf "/opt/${APP_NAME}/${APP_BINARY}" "${pkg_root}/usr/bin/${APP_NAME}"
+          # Minimal Debian control metadata. Depends on GTK + libsecret + libjsoncpp
+          # which are the runtime deps this Flutter app relies on (see apt-get
+          # install step above for the build-time counterparts).
+          cat > "${pkg_root}/DEBIAN/control" <<EOF
+          Package: ${APP_NAME}
+          Version: ${APP_VERSION}-ci.${{ github.run_number }}
+          Section: utils
+          Priority: optional
+          Architecture: amd64
+          Depends: libgtk-3-0, libsecret-1-0, libjsoncpp25 | libjsoncpp26 | libjsoncpp1
+          Maintainer: aldok10 <aldok10@users.noreply.github.com>
+          Description: Vault Env Manager
+           Secure desktop vault for managing application environments and secrets.
+          EOF
+          chmod 0755 "${pkg_root}/DEBIAN"
+          fakeroot dpkg-deb --build "${pkg_root}" \
+            "dist/${APP_NAME}-${APP_VERSION}-ci.${{ github.run_number }}-linux-amd64.deb"
+          tar -C "${bundle_dir}" -czf \
+            "dist/${APP_NAME}-${APP_VERSION}-ci.${{ github.run_number }}-linux-amd64.tar.gz" .
+          ls -la dist/
+
+      - name: Package macOS (.dmg + .zip)
+        if: matrix.target == 'macos'
+        shell: bash
+        env:
+          APP_VERSION: ${{ steps.version.outputs.semver }}
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          release_dir="build/macos/Build/Products/Release"
+          app_bundle="$(find "${release_dir}" -maxdepth 1 -type d -name '*.app' | head -n 1)"
+          if [ -z "${app_bundle}" ]; then
+            echo "No .app bundle found under ${release_dir}" >&2
+            exit 1
+          fi
+          app_name="$(basename "${app_bundle}")"
+          version_suffix="${APP_VERSION}-ci.${{ github.run_number }}"
+          # .dmg via hdiutil (UDZO = compressed, read-only).
+          hdiutil create \
+            -volname "${APP_NAME}" \
+            -srcfolder "${app_bundle}" \
+            -ov -format UDZO \
+            "dist/${APP_NAME}-${version_suffix}-macos.dmg"
+          # Fallback .zip for users who cannot mount a .dmg in CI.
+          ditto -c -k --sequesterRsrc --keepParent \
+            "${app_bundle}" \
+            "dist/${APP_NAME}-${version_suffix}-macos.zip"
+          ls -la dist/
+          echo "Packaged ${app_name}"
+
+      - name: Package Windows (.zip)
+        if: matrix.target == 'windows'
+        shell: pwsh
+        env:
+          APP_VERSION: ${{ steps.version.outputs.semver }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          $releaseDir = 'build/windows/x64/runner/Release'
+          $versionSuffix = "$env:APP_VERSION-ci.${{ github.run_number }}"
+          $zipPath = "dist/$env:APP_NAME-$versionSuffix-windows-x64.zip"
+          Compress-Archive -Path (Join-Path $releaseDir '*') -DestinationPath $zipPath -Force
+          Get-ChildItem dist | Format-Table Name, Length
+
+      - name: Upload ${{ matrix.target }} installers
         uses: actions/upload-artifact@v4
         with:
           name: vault-env-manager-${{ matrix.target }}-${{ github.run_number }}
-          path: ${{ matrix.artifact_glob }}
+          path: dist/**
           if-no-files-found: error
           retention-days: 14
-          compression-level: 6
+          compression-level: 0
+
+  # -------------------------------------------------------------------
+  # Release job. Only fires on direct pushes to `main` (i.e. after a PR
+  # merges). Downloads every per-target installer and publishes them as
+  # assets of a rolling GitHub Release tagged `build-<run>-<sha>`. This
+  # tag does NOT match the `v*` glob `flutter_release.yml` listens on,
+  # so the two workflows never double-publish. Signed macOS + mobile +
+  # web bundles still ship from `flutter_release.yml` on explicit `vX.Y.Z`
+  # tags.
+  # -------------------------------------------------------------------
+  release:
+    name: Publish GitHub Release
+    needs: build-desktop
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Resolve release metadata
+        id: meta
+        shell: bash
+        run: |
+          raw="$(grep '^version: ' pubspec.yaml | awk '{print $2}')"
+          semver="${raw%%+*}"
+          short_sha="$(echo "${GITHUB_SHA}" | cut -c1-7)"
+          tag="build-${{ github.run_number }}-${short_sha}"
+          echo "semver=${semver}" >> "$GITHUB_OUTPUT"
+          echo "short_sha=${short_sha}" >> "$GITHUB_OUTPUT"
+          echo "tag=${tag}" >> "$GITHUB_OUTPUT"
+          echo "name=Desktop Build ${semver}-ci.${{ github.run_number }} (${short_sha})" >> "$GITHUB_OUTPUT"
+
+      - name: Download all per-target installers
+        uses: actions/download-artifact@v4
+        with:
+          path: downloaded
+          pattern: vault-env-manager-*-${{ github.run_number }}
+          merge-multiple: true
+
+      - name: List collected installers
+        shell: bash
+        run: |
+          echo "--- contents of downloaded/ ---"
+          find downloaded -type f -maxdepth 2 -print
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.meta.outputs.tag }}
+          name: ${{ steps.meta.outputs.name }}
+          prerelease: true
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          body: |
+            Automated desktop build produced after merge to `main`.
+
+            - Commit: `${{ github.sha }}`
+            - Pubspec version: `${{ steps.meta.outputs.semver }}`
+            - Build number: `${{ github.run_number }}`
+
+            ### Downloads
+
+            | Platform | File | Notes |
+            | --- | --- | --- |
+            | Linux | `${{ env.APP_NAME }}-*-linux-amd64.deb` / `.tar.gz` | Depends on `libgtk-3-0`, `libsecret-1-0`, `libjsoncpp*`. |
+            | macOS | `${{ env.APP_NAME }}-*-macos.dmg` / `.zip` | Ad-hoc signed. Run `xattr -cr *.app` if Gatekeeper blocks first launch. |
+            | Windows | `${{ env.APP_NAME }}-*-windows-x64.zip` | Unpack and run `${{ env.APP_BINARY }}.exe`. |
+
+            Signed / store-ready builds are still produced by `flutter_release.yml` on explicit `v*` tags.
+          files: |
+            downloaded/**/*.deb
+            downloaded/**/*.tar.gz
+            downloaded/**/*.dmg
+            downloaded/**/*.zip
