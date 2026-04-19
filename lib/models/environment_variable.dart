@@ -1,22 +1,31 @@
-class EnvironmentVariable {
+import 'package:equatable/equatable.dart';
+
+class EnvironmentVariable extends Equatable {
   final String key;
   final String value;
   final String? description;
   final bool encrypted;
 
-  EnvironmentVariable({
+  const EnvironmentVariable({
     required this.key,
     required this.value,
     this.description,
     this.encrypted = true,
-  });
+  }) {
+    if (key.isEmpty) {
+      throw ArgumentError('Key cannot be empty');
+    }
+    if (key.contains(' ')) {
+      throw ArgumentError('Key cannot contain spaces');
+    }
+  }
 
   factory EnvironmentVariable.fromJson(Map<String, dynamic> json) {
     return EnvironmentVariable(
-      key: json['key'],
-      value: json['value'],
-      description: json['description'],
-      encrypted: json['encrypted'] ?? true,
+      key: json['key'] as String,
+      value: json['value'] as String,
+      description: json['description'] as String?,
+      encrypted: json['encrypted'] as bool? ?? true,
     );
   }
 
@@ -42,4 +51,7 @@ class EnvironmentVariable {
       encrypted: encrypted ?? this.encrypted,
     );
   }
+
+  @override
+  List<Object?> get props => [key, value, description, encrypted];
 }
