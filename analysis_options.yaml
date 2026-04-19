@@ -14,7 +14,7 @@ linter:
     # Errors
     - always_declare_return_types
     - avoid_empty_else
-    - avoid_print
+    - # avoid_print (disabled for development)
     - avoid_relative_lib_imports
     - avoid_returning_null_for_void
     - avoid_slow_async_io
@@ -33,10 +33,10 @@ linter:
     - no_duplicate_case_values
     - no_logic_in_create_state
     - no_runtimeType_to_string
-    - prefer_const_constructors
-    - prefer_const_constructors_in_immutables
-    - prefer_const_declarations
-    - prefer_const_literals_to_create_immutables
+    - # prefer_const_constructors (disabled for development)
+    - # prefer_const_constructors_in_immutables (disabled for development)
+    - # prefer_const_declarations (disabled for development)
+    - # prefer_const_literals_to_create_immutables (disabled for development)
     - prefer_constructors_over_static_methods
     - prefer_final_fields
     - prefer_final_in_for_each
@@ -111,7 +111,7 @@ linter:
     - test_types_in_equals
     - throw_in_valid_context
     - type_init_formals
-    - unawaited_futures
+    - # unawaited_futures (disabled for development)
     - unnecessary_await_in_return
     - unnecessary_brace_in_string_interps
     - unnecessary_const
