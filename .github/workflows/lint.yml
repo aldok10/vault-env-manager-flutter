@@ -2,9 +2,9 @@ name: Flutter Lint
 
 on:
   push:
-    branches: [feat/code-quality-security-cicd]
+    branches: [main, feat/*]
   pull_request:
-    branches: [feat/code-quality-security-cicd]
+    branches: [main, feat/*]
   schedule:
     - cron: "0 0 * * 0"
 
@@ -13,6 +13,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.pub-cache
+            **/pubspec.lock
+          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: "3.19"
