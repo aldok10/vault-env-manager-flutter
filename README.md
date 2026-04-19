@@ -21,31 +21,10 @@ A secure Flutter application for managing environment variables with encryption 
 
 ---
 
-## ⚙️ Prasyarat
+## 📋 Screenshots
 
-- Flutter 3.19+
-- Dart 3.3+
-- Android Studio / Xcode (opsional, untuk build platform spesifik)
-
----
-
-## 🚀 Instalasi
-
-1. **Clone Repository**
-   ```bash
-   git clone https://github.com/aldok10/vault-env-manager-flutter.git
-   cd vault-env-manager-flutter
-   ```
-
-2. **Install Dependencies**
-   ```bash
-   flutter pub get
-   ```
-
-3. **Run Aplikasi**
-   ```bash
-   flutter run
-   ```
+![Home Screen](https://via.placeholder.com/400x200?text=Home+Screen+Placeholder)
+![Add Variable](https://via.placeholder.com/400x200?text=Add+Variable+Placeholder)
 
 ---
 
@@ -67,6 +46,26 @@ lib/
 │   └── encryption_utils.dart        # Utility untuk enkripsi/dekripsi
 └── main.dart                        # Entry point aplikasi
 ```
+
+---
+
+## 🚀 Instalasi
+
+1. **Clone Repository**
+   ```bash
+   git clone https://github.com/aldok10/vault-env-manager-flutter.git
+   cd vault-env-manager-flutter
+   ```
+
+2. **Install Dependencies**
+   ```bash
+   flutter pub get
+   ```
+
+3. **Run Aplikasi**
+   ```bash
+   flutter run
+   ```
 
 ---
 
@@ -126,3 +125,12 @@ Distributed under the MIT License. See `LICENSE` for more information.
 Aldo Karendra - [@aldok10](https://github.com/aldok10)
 
 Project Link: [https://github.com/aldok10/vault-env-manager-flutter](https://github.com/aldok10/vault-env-manager-flutter)
+
+---
+
+## 📝 Roadmap
+
+- Integrasi dengan HashiCorp Vault
+- Dukungan untuk lebih banyak bahasa
+- Fitur auto-lock setelah periode tidak aktif
+- Peningkatan UI/UX dengan animasi dan tema gelap
