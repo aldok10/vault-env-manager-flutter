@@ -42,10 +42,10 @@ final class VaultService extends GetxService {
           ),
         );
       }
-    } on SecurityException catch (e) {
-      return Left(VaultSecurityFailure(e.message));
     } on http.ClientException catch (e) {
       return Left(NetworkFailure('Connection failed: ${e.message}'));
+    } on SecurityException catch (e) {
+      return Left(VaultSecurityFailure(e.message));
     } catch (e) {
       return Left(ServerFailure('Unexpected error: ${e.toString()}'));
     }
