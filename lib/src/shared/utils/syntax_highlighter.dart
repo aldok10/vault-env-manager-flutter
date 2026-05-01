@@ -113,6 +113,7 @@ class SyntaxHighlighter {
       return [TextSpan(text: text, style: baseStyle)];
     }
 
+    final styles = allPatterns.values.toList();
     final combinedRegex = _combinedRegexCache.putIfAbsent(
       type,
       () => RegExp(
@@ -134,7 +135,6 @@ class SyntaxHighlighter {
       }
 
       TextStyle? matchStyle;
-      final styles = allPatterns.values.toList();
       for (int i = 0; i < styles.length; i++) {
         if (match.group(i + 1) != null) {
           matchStyle = styles[i];
