@@ -150,11 +150,11 @@ class SeraphineColorExtension extends ThemeExtension<SeraphineColorExtension> {
   }
 
   @override
-  ThemeExtension<SeraphineColorExtension> lerp(
-    ThemeExtension<SeraphineColorExtension>? other,
+  SeraphineColorExtension lerp(
+    covariant SeraphineColorExtension? other,
     double t,
   ) {
-    if (other is! SeraphineColorExtension) {
+    if (other == null) {
       return this;
     }
     return SeraphineColorExtension(
