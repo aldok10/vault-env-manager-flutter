@@ -23,12 +23,13 @@ class SecureHttpClient extends http.BaseClient {
     this._secretKey, {
     String? certificateFingerprint,
   }) : _certificateFingerprint = certificateFingerprint {
-    if (_certificateFingerprint != null && _certificateFingerprint.isNotEmpty) {
-      final safeEnd = _certificateFingerprint.length < 8
-          ? _certificateFingerprint.length
+    final fp = _certificateFingerprint;
+    if (fp != null && fp.isNotEmpty) {
+      final safeEnd = fp.length < 8
+          ? fp.length
           : 8;
       debugPrint(
-        'SecureHttpClient: Certificate Pinning initialized with fingerprint starting with ${_certificateFingerprint.substring(0, safeEnd)}...',
+        'SecureHttpClient: Certificate Pinning initialized with fingerprint starting with ${fp.substring(0, safeEnd)}...',
       );
     }
   }
@@ -63,8 +64,6 @@ class SecureHttpClient extends http.BaseClient {
                 crypto.sha256.convert(cert.der).toString().toLowerCase();
             debugPrint('⚠️ SECURITY ALERT: Certificate Pinning Mismatch!');
             debugPrint('Host: $host:$port');
-            debugPrint('Expected: $expectedHash');
-            debugPrint('Received: $certHash');
           }
         }
         return accept;
