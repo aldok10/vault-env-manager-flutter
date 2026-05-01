@@ -38,7 +38,18 @@ class VaultConfigService extends GetxService {
   Stream<String> get onProfileSwitched => _profileSwitchController.stream;
 
   Future<VaultConfigService> init(Map<String, String> envDefaults) async {
-    final profilesJson = await _storage.get(_kVaultProfiles, isSecure: false);
+    String? profilesJson = await _storage.get(_kVaultProfiles, isSecure: true);
+
+    // Migration from normal to secure storage
+    if (profilesJson == null || profilesJson.isEmpty) {
+      final oldJson = await _storage.get(_kVaultProfiles, isSecure: false);
+      if (oldJson != null && oldJson.isNotEmpty) {
+        await _storage.saveSecure(_kVaultProfiles, oldJson);
+        await _storage.delete(_kVaultProfiles, isSecure: false);
+        profilesJson = oldJson;
+      }
+    }
+
     if (profilesJson != null && profilesJson.isNotEmpty) {
       try {
         final List<dynamic> list = await ComputeService.to.parseJsonList(
@@ -62,9 +73,19 @@ class VaultConfigService extends GetxService {
     if (vaultProfiles.isEmpty) {
       await _initializeDefaultProfile(envDefaults);
     } else {
-      activeProfileId.value =
-          await _storage.get(_kActiveProfileId, isSecure: false) ??
-              vaultProfiles.first.id;
+      String? activeId = await _storage.get(_kActiveProfileId, isSecure: true);
+
+      // Migration from normal to secure storage
+      if (activeId == null || activeId.isEmpty) {
+        final oldId = await _storage.get(_kActiveProfileId, isSecure: false);
+        if (oldId != null && oldId.isNotEmpty) {
+          await _storage.saveSecure(_kActiveProfileId, oldId);
+          await _storage.delete(_kActiveProfileId, isSecure: false);
+          activeId = oldId;
+        }
+      }
+
+      activeProfileId.value = activeId ?? vaultProfiles.first.id;
     }
 
     cipherPass.value = await _storage.get(_kCipherPass, isSecure: true) ?? '';
@@ -90,7 +111,7 @@ class VaultConfigService extends GetxService {
     vaultProfiles.add(defaultProfile);
     await _persistProfiles();
     activeProfileId.value = 'default';
-    await _storage.saveNormal(_kActiveProfileId, 'default');
+    await _storage.saveSecure(_kActiveProfileId, 'default');
   }
 
   Future<void> switchActiveProfile(String profileId) async {
@@ -103,7 +124,7 @@ class VaultConfigService extends GetxService {
       );
 
       activeProfileId.value = profile.id;
-      await _storage.saveNormal(_kActiveProfileId, profile.id);
+      await _storage.saveSecure(_kActiveProfileId, profile.id);
 
       vaultOrigin.value = profile.vaultOrigin;
       vaultUiDomain.value = profile.vaultUiDomain;
@@ -216,7 +237,7 @@ class VaultConfigService extends GetxService {
   Future<void> _persistProfiles() async {
     final data = vaultProfiles.map((e) => e.toMap()).toList();
     final jsonString = await ComputeService.to.stringifyJson(data);
-    await _storage.saveNormal(_kVaultProfiles, jsonString);
+    await _storage.saveSecure(_kVaultProfiles, jsonString);
   }
 
   Future<void> setCipherPass(String pass) async {

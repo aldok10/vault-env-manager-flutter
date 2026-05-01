@@ -64,10 +64,10 @@ void main() {
       await service.init();
 
       // Act
-      await service.setThemeMode('Light');
+      await service.setThemeMode('light');
 
       // Assert
-      expect(service.themeMode.value, 'Light');
+      expect(service.themeMode.value, 'light');
     });
   });
 }
