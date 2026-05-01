@@ -277,26 +277,26 @@ jobs:
             "${pkg_root}/usr/share/icons/hicolor/512x512/apps/${APP_NAME}.png"
           # Basic .desktop entry so the installer shows up in app launchers.
           cat > "${pkg_root}/usr/share/applications/${APP_NAME}.desktop" <<DESKTOP
-          [Desktop Entry]
-          Name=${APP_DISPLAY_NAME}
-          Comment=Secure desktop vault for managing application environments and secrets.
-          Exec=/opt/${APP_NAME}/${APP_BINARY}
-          Icon=${APP_NAME}
-          Terminal=false
-          Type=Application
-          Categories=Utility;Development;
-          DESKTOP
+[Desktop Entry]
+Name=${APP_DISPLAY_NAME}
+Comment=Secure desktop vault for managing application environments and secrets.
+Exec=/opt/${APP_NAME}/${APP_BINARY}
+Icon=${APP_NAME}
+Terminal=false
+Type=Application
+Categories=Utility;Development;
+DESKTOP
           cat > "${pkg_root}/DEBIAN/control" <<EOF
-          Package: ${APP_NAME}
-          Version: ${VERSION_TAG}
-          Section: utils
-          Priority: optional
-          Architecture: ${DEB_ARCH}
-          Depends: libgtk-3-0, libsecret-1-0, libjsoncpp25 | libjsoncpp26 | libjsoncpp1
-          Maintainer: aldok10 <aldok10@users.noreply.github.com>
-          Description: ${APP_DISPLAY_NAME}
-           Secure desktop vault for managing application environments and secrets.
-          EOF
+Package: ${APP_NAME}
+Version: ${VERSION_TAG}
+Section: utils
+Priority: optional
+Architecture: ${DEB_ARCH}
+Depends: libgtk-3-0, libsecret-1-0, libjsoncpp25 | libjsoncpp26 | libjsoncpp1
+Maintainer: aldok10 <aldok10@users.noreply.github.com>
+Description: ${APP_DISPLAY_NAME}
+ Secure desktop vault for managing application environments and secrets.
+EOF
           chmod 0755 "${pkg_root}/DEBIAN"
           fakeroot dpkg-deb --build "${pkg_root}" \
             "dist/${APP_NAME}-${VERSION_TAG}-linux-${DEB_ARCH}.deb"
@@ -373,15 +373,11 @@ jobs:
           /usr/bin/codesign --verify --deep --strict --verbose=2 "${app_bundle}" || true
 
           # ---- .pkg installer (double-click install wizard) ----
-          pkg_payload="staging/pkg-root"
-          rm -rf "${pkg_payload}"
-          mkdir -p "${pkg_payload}/Applications"
-          /usr/bin/ditto "${app_bundle}" "${pkg_payload}/Applications/${app_name}"
           /usr/bin/pkgbuild \
-            --root "${pkg_payload}" \
+            --component "${app_bundle}" \
             --identifier "${APP_BUNDLE_ID}" \
             --version "${APP_VERSION}" \
-            --install-location "/" \
+            --install-location "/Applications" \
             "dist/${APP_NAME}-${VERSION_TAG}-macos-${ARCH}.pkg"
 
           # ---- .dmg with helper for first-launch Gatekeeper bypass ----
