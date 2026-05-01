@@ -20,11 +20,11 @@ class EnvParser {
       }
 
       // Split only on the first '='
-      final parts = trimmedLine.split('=');
-      if (parts.length < 2) continue;
+      final equalsIndex = trimmedLine.indexOf('=');
+      if (equalsIndex == -1) continue;
 
-      final key = parts[0].trim();
-      var value = parts.sublist(1).join('=').trim();
+      final key = trimmedLine.substring(0, equalsIndex).trim();
+      var value = trimmedLine.substring(equalsIndex + 1).trim();
 
       // Handle quoted values
       if ((value.startsWith('"') && value.endsWith('"')) ||
