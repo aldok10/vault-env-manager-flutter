@@ -77,7 +77,7 @@ class SeraphineColorExtension extends ThemeExtension<SeraphineColorExtension> {
   });
 
   @override
-  ThemeExtension<SeraphineColorExtension> copyWith({
+  SeraphineColorExtension copyWith({
     Color? primary,
     Color? primaryGlow,
     Color? primaryGlowIntense,
@@ -150,11 +150,11 @@ class SeraphineColorExtension extends ThemeExtension<SeraphineColorExtension> {
   }
 
   @override
-  ThemeExtension<SeraphineColorExtension> lerp(
-    ThemeExtension<SeraphineColorExtension>? other,
+  SeraphineColorExtension lerp(
+    SeraphineColorExtension? other,
     double t,
   ) {
-    if (other is! SeraphineColorExtension) {
+    if (other == null) {
       return this;
     }
     return SeraphineColorExtension(
