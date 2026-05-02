@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:cryptography/cryptography.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
+import 'package:vault_env_manager/src/core/app/data/services/storage_service.dart';
 import 'package:vault_env_manager/src/core/error/exceptions.dart';
 
 /// Centralized service for Security concerns:
@@ -20,12 +21,24 @@ class SecurityService extends GetxService {
   Future<SecurityService> init() async {
     debugPrint('SecurityService: Initializing...');
 
-    // In a real app, this key would be derived from a master password
-    // or fetched from a secure enclave (Keychain/Keystore).
-    // For this implementation, we'll use a deterministic key for the session.
-    _payloadKey = SecretKey(List<int>.generate(32, (i) => i + 42));
+    final storedKey =
+        await StorageService.to.get('payload_encryption_key', isSecure: true);
 
-    debugPrint('SecurityService: Key established.');
+    if (storedKey != null && storedKey.isNotEmpty) {
+      _payloadKey = SecretKey(base64Decode(storedKey));
+      debugPrint('SecurityService: Key loaded from secure storage.');
+    } else {
+      final newKey = await _algorithm.newSecretKey();
+      final keyBytes = await newKey.extractBytes();
+      _payloadKey = SecretKey(keyBytes);
+
+      await StorageService.to
+          .saveSecure('payload_encryption_key', base64Encode(keyBytes));
+
+      debugPrint(
+          'SecurityService: New session key generated and securely stored.');
+    }
+
     return this;
   }
 
