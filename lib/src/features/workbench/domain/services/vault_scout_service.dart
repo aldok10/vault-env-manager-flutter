@@ -68,43 +68,53 @@ class VaultScoutService {
       (keys) async {
         final sortedKeys = List<String>.from(keys)..sort();
 
-        // 🚀 High-Performance Discovery: Parallelize sibling entry checks
-        final tasks = sortedKeys.map((key) async {
-          final fullPath = '$path$key';
+        // 🚀 High-Performance Discovery: Parallelize sibling entry checks in batches
+        // to avoid overwhelming Vault with concurrent network requests.
+        const int batchSize = 10;
+        final taskResults = <({int count, bool hasSecrets})>[];
 
-          if (key.endsWith('/')) {
-            // Recurse into directory
-            final subResult = await _recursiveCrawl(
-              fullPath,
-              results,
-              onNodeDiscovered: onNodeDiscovered,
-            );
+        for (var i = 0; i < sortedKeys.length; i += batchSize) {
+          final int end = (i + batchSize < sortedKeys.length) ? i + batchSize : sortedKeys.length;
+          final batch = sortedKeys.sublist(i, end);
+          final tasks = batch.map((key) async {
+            final fullPath = '$path$key';
 
-            if (subResult.hasSecrets) {
-              final folderNode = ScoutNode.fromPath(fullPath, isFolder: true);
-              results.add(folderNode);
-              onNodeDiscovered?.call(folderNode);
-              return (hasSecrets: true, count: subResult.count);
-            }
-          } else {
-            // Process secret leaf
-            final metaResult = await _repository.getMetadata(fullPath);
-            return metaResult.fold((_) => (hasSecrets: false, count: 0), (
-              meta,
-            ) {
-              final node = ScoutNode.fromPath(
+            if (key.endsWith('/')) {
+              // Recurse into directory
+              final subResult = await _recursiveCrawl(
                 fullPath,
-                version: meta['current_version'] as int?,
+                results,
+                onNodeDiscovered: onNodeDiscovered,
               );
-              results.add(node);
-              onNodeDiscovered?.call(node);
-              return (hasSecrets: true, count: 1);
-            });
-          }
-          return (hasSecrets: false, count: 0);
-        });
 
-        final taskResults = await Future.wait(tasks);
+              if (subResult.hasSecrets) {
+                final folderNode = ScoutNode.fromPath(fullPath, isFolder: true);
+                results.add(folderNode);
+                onNodeDiscovered?.call(folderNode);
+                return (hasSecrets: true, count: subResult.count);
+              }
+            } else {
+              // Process secret leaf
+              final metaResult = await _repository.getMetadata(fullPath);
+              return metaResult.fold((_) => (hasSecrets: false, count: 0), (
+                meta,
+              ) {
+                final node = ScoutNode.fromPath(
+                  fullPath,
+                  version: meta['current_version'] as int?,
+                );
+                results.add(node);
+                onNodeDiscovered?.call(node);
+                return (hasSecrets: true, count: 1);
+              });
+            }
+            return (hasSecrets: false, count: 0);
+          });
+
+          final batchResults = await Future.wait(tasks);
+          taskResults.addAll(batchResults);
+        }
+
         for (final res in taskResults) {
           if (res.hasSecrets) {
             branchHasSecrets = true;
