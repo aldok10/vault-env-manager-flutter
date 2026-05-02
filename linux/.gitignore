@@ -1,1 +1,4 @@
 flutter/ephemeral
+
+# Allow tracking the moved CMake config inside the ephemeral directory
+!flutter/ephemeral/flutter_linux.cmake
