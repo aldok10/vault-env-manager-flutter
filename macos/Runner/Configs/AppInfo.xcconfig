@@ -11,4 +11,4 @@ PRODUCT_NAME = vault_env_manager
 PRODUCT_BUNDLE_IDENTIFIER = com.aldok10.vaultenvmanager
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2026 com.example. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2026 com.aldok10. All rights reserved.
