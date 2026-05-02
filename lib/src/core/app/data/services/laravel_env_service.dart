@@ -9,7 +9,6 @@ import 'package:vault_env_manager/src/shared/utils/env_parser.dart';
 class LaravelEnvService extends GetxService {
   late final EncryptionService _encryptionService;
 
-  @override
   void onInit() {
     super.onInit();
     _encryptionService = Get.find<EncryptionService>();
